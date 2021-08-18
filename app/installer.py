@@ -54,7 +54,8 @@ def main():
     app.setTitle('Automatic Create WebApp')
 
     # Install to <document_root> in Files
-    app.install()
+    if os.path.exists(app.getPyFile()) is not True:
+        app.install()
 
     # Automation WSGI Run Script
     # Look at Your Set Host & Port Number!!

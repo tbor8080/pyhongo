@@ -91,7 +91,7 @@ class WebApp:
         return self.py_filename
 
     def setPyFile(self, file):
-        self.py_filename=file
+        self.py_filename=self.getInstallDir()+'/'+file
 
     def getTmplFile(self):
         return self.tmpl_filename
@@ -153,6 +153,7 @@ class WebApp:
         # execute python code
         if file is None:
             file=self.getPyFile()
+            print(self.getPyFile())
         subprocess.call('python %s' % file, shell=True)
 
     def installAction(self,count):
@@ -557,7 +558,9 @@ if __name__=="__main__":
         print(text)
 
     def install(self):
+
         dir=self.getInstallDir()
+
         log_file=dir+'/install.log'
         log_text='*********************************************************************\n'
         log_text+=f'Install to "{self.getInstallDir()}" Directory\n'
@@ -567,8 +570,8 @@ if __name__=="__main__":
         print(log_text)
         
         text=self.setCodePy()
-        file=dir+'/'+self.getPyFile()
-        self.setPyFile(file)
+        # file=self.getPyFile()
+        # self.setPyFile(file)
         self.write(self.getPyFile(),text)
         
         log_text='create python program > '+self.getPyFile()
