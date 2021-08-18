@@ -3,6 +3,7 @@
 
 from py.webconfig import *
 from sqlite import *
+from threading import Thread
 
 ####################################################################################################
 # global variable
@@ -42,7 +43,7 @@ def main():
     app.setPyFile(PyFile)
     app.setTmplFile(TmplFile)
     
-    app.setPort(8080)
+    app.setPort(5000)
 
     # Append Flask Routing
     app.setRoute({'path':'/', 'function':'index'})
@@ -51,13 +52,19 @@ def main():
     
     # Web Application Title
     app.setTitle('Automatic Create WebApp')
-    
+
     # Install to <document_root> in Files
     app.install()
 
     # Automation WSGI Run Script
     # Look at Your Set Host & Port Number!!
-    app.run()
+    # And stay a little time, webdriver(chrome) run (auto input host & port)
+    run_the_app=Thread(target=app.run)
+    run_browse=Thread(target=app.browse)
+    run_the_app.start()
+    run_browse.start()
+
+    # return for the GUI Application
     return app,db
 
 # debug script
@@ -72,9 +79,9 @@ def forDebug():
 
 if __name__=='__main__':
     (app,db)=main()
-    # main()
-    # print(app)
-    # gui_main(app)
+
+    # SQLite Explorer (GUI Application)
+    gui_main(app)
     # forDebug()
     
     

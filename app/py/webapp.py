@@ -10,6 +10,11 @@ except ModuleNotFoundError:
 import inspect
 from py.database import *
 
+try:
+    from selenium.webdriver import Chrome,ChromeOptions
+except ModuleNotFoundError:
+    print('Please "pip install selenium."')
+
 class WebApp:
     """
         Web Application Class
@@ -35,6 +40,7 @@ class WebApp:
         'document_root':'./applications',
         'directory':['/database','/templates','/static','/javascript','/css','/img']
     }
+    host='127.0.0.1'
 
     def getMethod(self,cls=None):
         if cls is not None:
@@ -144,7 +150,7 @@ class WebApp:
                 fp.write(text)
 
     def run(self,file=None):
-        #execute python code
+        # execute python code
         if file is None:
             file=self.getPyFile()
         subprocess.call('python %s' % file, shell=True)
@@ -177,7 +183,13 @@ class WebApp:
     
     def show(self,text=None):
         print(text)
-
+    
+    def browse(self):
+        (host,port)=self.getHost(),self.getPort()
+        url=f'http://{host}:{port}/'
+        # selenium code:
+        driver=Chrome()
+        driver.get(url)
 
 class WebAppInDjango(WebApp):
     """
@@ -345,11 +357,13 @@ class WebAppInFlask(WebApp):
         text='\t{\n'
         text+=f'''
             "tmpl_file":"{self.getTmplFile()}",
+            "host":"{self.getHost()}",
+            "port":"{self.getPort()}",
             "appname":"{self.getTitle()}",
             "dbtype":"{self.getType()}",
             "dbname":"{self.getDatabaseName()}",
             "dbtbl":{self.getTable()},
-            "apppath":"{self.getPath()}{self.getDocumentRoot().replace('.','')}",
+            "apppath":"{self.getCurrentDirectory()}",
             "doc_root":"{self.getDocumentRoot()}",
             "directory":'''
         text+='''{

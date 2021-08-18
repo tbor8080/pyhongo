@@ -1,0 +1,19 @@
+	{
+
+            "tmpl_file":"main.html",
+            "appname":"Automatic Create WebApp",
+            "dbtype":"False",
+            "dbname":"None",
+            "dbtbl":[],
+            "apppath":"/Users/ryohei/Desktop/program/Py/PySeisaku/webapp/sample",
+            "doc_root":"./sample",
+            "directory":{
+            "database":"./sample/database",
+                "templates":"./sample/templates",
+                "static": "./sample/static",
+                "javascript":"./sample/static/javascript",
+                "css":"./sample/static/css",
+                "img":"./sample/static/img"},
+        
+        "route":"[{'path': '/', 'function': 'index'}, {'path': '/main', 'function': 'main'}, {'path': '/test/sample', 'function': 'test'}]"
+        }

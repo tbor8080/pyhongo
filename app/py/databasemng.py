@@ -360,8 +360,8 @@ class Loading:
         sqlite_button.bind('<1>',self.sqlite_onclick)
         sqlite_button.pack()
 
-        flask_button=tk.Button(sqlite_button_window,text='run the flask')
-        flask_button.bind('<1>',self.onclick_flask_run)
-        flask_button.pack()
+        # flask_button=tk.Button(sqlite_button_window,text='run the flask')
+        # flask_button.bind('<1>',self.onclick_flask_run)
+        # flask_button.pack()
         
         sqlite_button_window.mainloop()
