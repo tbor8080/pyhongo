@@ -4,12 +4,12 @@
     
 ### [ Directory ]:
 
-    - app/
+    app/
 
         Automatic Web Application
         Python Code.
 
-    - ### pdf/
+    pdf/
 
         Selenium Presentation
         File Type: PDF 
