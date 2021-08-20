@@ -1,13 +1,15 @@
 # Py Hongo repositry
 
-> Upload Date: 2021.08.18
+    Upload Date: 2021.08.18
+    
+[ Directory ]:
 
-- ### app/
+    - app/
 
-Automatic Web Application
-Python Code.
+        Automatic Web Application
+        Python Code.
 
-- ### pdf/
+    - ### pdf/
 
-Selenium Presentation
-File Type: PDF 
+        Selenium Presentation
+        File Type: PDF 
