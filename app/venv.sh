@@ -1,1 +1,5 @@
-echo 'source ../../develop/bin/activate'
+op=$1
+if [ $op-ne'' ]; then
+    #python -m venv $1
+    echo $op
+fi

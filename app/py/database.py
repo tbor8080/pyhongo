@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import inspect
-import sqlite3
+import sqlite3,pycopg2
 from py.sql import *
 
 class Database(ForSQL):
@@ -128,7 +128,6 @@ class SelectSQLite3(Database):
         self.conn=None
         if self.getType():
             self.conn=sqlite3.connect(self.getDatabaseName())
-
         return self.conn
 
     def _cursor(self):
@@ -140,20 +139,6 @@ class SelectSQLite3(Database):
     def _close(self):
         if self.conn is not None:
             self.conn.close()
-    
-    def _fetch(self,sql=None):
-        if type(sql) is str:
-            self._exe(sql)
-            return self.csr.fetchall()
-
-    def _exe(self,sql=None,lists=[]):
-        if self.csr is not None:
-            self.csr.execute(sql)
-    
-    def _insert(self,sql=None,data=[]):
-        # INSERT INTO TABLENAME VALUES
-        if self.csr is not None:
-            self.csr.execute(sql,data)
 
 class SelectMySQL(Database):
     """MySQL:

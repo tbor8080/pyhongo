@@ -421,7 +421,7 @@ conn.close()'''
         return text
 
     def getImportModule(self):
-        return importModule
+        return self.importModule
 
     # setImportModule('os','sys','datetime')
     def setImportModule(self,module=['os','sys','datetime']):
