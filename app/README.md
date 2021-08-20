@@ -2,12 +2,11 @@
 [ Update ]:
 
     Next Update to 2021.08.28
-    
+
 [ How to Install ]:
 
     > python -m venv <VENV Directory Name>
-    > pip install Flask
-    > pip install selenium
+    > pip -r requirements.txt
     > python ./installer.py
 
 [ Document Root ]:
