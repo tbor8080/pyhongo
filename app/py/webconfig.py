@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from py.webapp import *
+
 class WebAppConfig(Database,WebAppInFlask):
 
     """
@@ -70,11 +71,13 @@ class WebAppConfig(Database,WebAppInFlask):
         'sqlite':False,
         'mysql':False,
         'pgsql':False,
+        'psql':False,
     }
 
     __framework__={
         'flask':False,
         'django':False,
+        'cart':False
     }
     
     def __init__(self):
@@ -82,7 +85,7 @@ class WebAppConfig(Database,WebAppInFlask):
         self.setDatabaseName(None)
         super().__init__(self.dbtype,self.dbname)
 
-    def config(self,database=None,framework=None,dbname=None,document_root=None):
+    def config(self,database=None,framework=None,dbname=None,document_root=None,**kwargs):
         if database is not None:
             self.setDatabase(database)
         if framework is not None:
@@ -92,6 +95,10 @@ class WebAppConfig(Database,WebAppInFlask):
         if document_root is not None:
             self.setDocumentRoot(document_root)
 
+        for kw in kwargs:
+            if kw == 'user':
+                self.setUser(kwargs[kw])
+
     def Database(self):
         document_root=self.getInstallDir()
         self.makeDir(document_root)
@@ -100,11 +107,12 @@ class WebAppConfig(Database,WebAppInFlask):
             self.makeDir(database_dir)
             return SelectSQLite3(True,dbname=database_dir+self.getDatabaseName())
 
-        elif self.__database__['mysql']:
-            return SelectMySQL(True,dbname=self.getDatabaseName())
-
-        elif self.__database__['pgsql']:
-            return SelectPgSQL(True,dbname=self.getDatabaseName())
+        elif self.__database__['pgsql'] or self.__database__['psql']:
+            try:
+                user=self.getUser()
+            except AttributeError:
+                self.setUser((None,None))
+            return SelectPgSQL(True,dbname=self.getDatabaseName(),user=user)
 
         # No Database Application
         return FileinFlask(False)
@@ -115,6 +123,8 @@ class WebAppConfig(Database,WebAppInFlask):
         
         if self.__framework__['django']:
             framework=WebAppInDjango()
+        elif self.__framework__['cart']:
+            framework=ShoppingCart()
 
         framework.setInstallDir(document_root)
         framework.setDatabaseName(self.getDatabaseName())

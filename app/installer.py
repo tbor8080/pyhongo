@@ -6,10 +6,47 @@ from sqlite import *
 from threading import Thread
 
 ####################################################################################################
-# global variable
+# change at variable:doc_root etc...
 ####################################################################################################
+# + Web Application: DOCUMENT_ROOT
 doc_root='./first_flask_app'
 
+# + WebApplication Title:
+web_title='Automatic Create WebApp'
+
+# + Python&Template File Name
+# For Python
+PyFile='main.py'
+
+# For HTML Template By Bootstrap
+TmplFile='main.html'
+
+# + for database: type is sqlite or postgres sql
+# User Account: password is None Type OK.
+# DatabaseUser=('username',None) or DatabaseUser=('username','')
+DatabaseUser=('ryohei',None)
+# Database Type is sqlite or pgsql or psql.
+# DatabaseType='sqlite' or DatabaseType='psql' or DatabaseType='pgsql'
+# mysql is not type.
+DatabaseType='pgsql'
+# Database Name is Your database
+DatabaseName='test'
+
+# + Flask : Routing List Example.(Tuple List)
+FlaskRouting=(
+    {'path':'/', 'function':'index', 'code':'hello="Hello."'},
+    {'path':'/main', 'function':'main'},
+    {'path':'/test', 'function':'test'},
+)
+
+# + Swtich To Installer.py: 
+__switch__={
+    "install":True,
+    "flask":True,
+    "gunicorn":False,
+    "database":(True,'sqlite'),
+    "browser":(True,'chrome')
+}
 
 ####################################################################################################
 # installer.py: Function
@@ -24,46 +61,74 @@ def createTable(db):
     db.appendColumn(columnname='document_sample_name',datatype='TEXT')
     db.appendColumn(columnname='regist_date',datatype='DATE')
 
-    # db.show(db.getCreateTableCode())
+    db.show(db.getCreateTableCode())
 
 # Installer main:config
 def main():
-    # Framework Class
+    # Framework: Create WebApp:
     Instanse=WebAppConfig()
-    # SQLite Config Example
-    # Instanse.config(database='sqlite',dbname='sample.db',document_root='./doc_root')
-    # Not Database Config Example
-    Instanse.config(document_root=doc_root)
+    # For SQLite Example
+    # Instanse.config(database='sqlite',dbname='sample.db',document_root=doc_root)
+    # For PostgreSQL
+    Instanse.config(database=DatabaseType,dbname=DatabaseName,user=DatabaseUser,document_root=doc_root)
+    # Non Database Config Example
+    #Instanse.config(document_root=doc_root)
     
     (db,app)=Instanse.db(),Instanse.app()
-    # createTable(db)
-    # Python&Template File Name
-    (PyFile,TmplFile)=('main.py','main.html')
-
+    
     app.setPyFile(PyFile)
     app.setTmplFile(TmplFile)
     
     app.setPort(5000)
 
-    # Append Flask Routing
-    app.setRoute({'path':'/', 'function':'index'})
-    app.setRoute({'path':'/main', 'function':'main'})
-    app.setRoute({'path':'/test', 'function':'test'})
+    # Set Routing for Flask
+    for i in range(len(FlaskRouting)):
+        app.setRoute(FlaskRouting[i])
     
     # Web Application Title
-    app.setTitle('Automatic Create WebApp')
-
+    app.setTitle(web_title)
+    
     # Install to <document_root> in Files
-    if os.path.exists(app.getPyFile()) is not True:
+    if os.path.exists(app.getPyFile()) is not True and app.switch_to('install',__switch__['install']):
         app.install()
+    else:
+        error_message=f"""
+++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Install Directory: {app.getInstallDir()} is exists.
++ Skip to app.install()
+++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Do you want to delete the directory?
++ Warning!!!! directory delete is command line. +
++ $ rm -rf {app.getInstallDir()}
++
+++++++++++++++++++++++++++++++++++++++++++++++++++++"""
+
+        print(error_message)
+
+        json_file=app.getInstallDir()+'/manage/config.json'
+        app.setJsonFile(json_file)
+        # print(app.getJsonFile())
+        # print(app.loadJson(app.getJsonFile()))
 
     # Automation WSGI Run Script
     # Look at Your Set Host & Port Number!!
-    # And stay a little time, webdriver(chrome) run (auto input host & port)
-    run_the_app=Thread(target=app.run)
-    run_browse=Thread(target=app.browse)
-    run_the_app.start()
-    run_browse.start()
+    # And stay a little time, webdriver(chrome) run! (auto browse host (& port))
+    
+    # Look at True or False
+    if app.switch_to('gunicorn',__switch__['gunicorn']):
+        Thread(target=app.gunicorn_start).start()
+
+    if app.switch_to('flask',__switch__['flask']):
+        Thread(target=app.run).start()
+
+    if app.switch_to('browser',__switch__['browser']):
+        Thread(target=app.browse).start()
+    
+    # SQLite Explorer (GUI Application)
+    if app.switch_to('sqlite',__switch__['database']):
+        # create database table:
+        # createTable(db)
+        gui_main(app,db)
 
     # return for the GUI Application
     return app,db
@@ -79,10 +144,6 @@ def forDebug():
         Instanse.getInherit(eval(clsname))
 
 if __name__=='__main__':
-    (app,db)=main()
-
-    # SQLite Explorer (GUI Application)
-    gui_main(app)
-    # forDebug()
+    main()
     
     

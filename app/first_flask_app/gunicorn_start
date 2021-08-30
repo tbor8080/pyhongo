@@ -1,0 +1,44 @@
+# Input Your Setting:
+# Read the gunicorn Documents
+# - (https://gunicorn.org/#quickstart)
+#
+#  Example 1)
+#	+ main.py in app=Flask(__name__)
+#		>> PROGRAM="main:app"
+#
+#  Example 2)
+#	+ main.py in application=Flask(__name__)
+#		>> PROGRAM="main"
+#               or
+#       >> PROGRAM="main:application"
+
+PROGRAM="main"
+
+# Input Your Host & Port Number:
+ADDRESS="127.0.0.1:8080"
+
+# WORKER
+WORKER=2
+
+cd `dirname $0`
+
+GUNICORN_COMMAND=`which gunicorn`
+
+if [ "$GUNICORN_COMMAND" = "" ] ;then
+	echo "- command not found ( at gunicorn ) "
+	echo "- install gunicorn, read the document."
+	echo "- https://gunicorn.org/#quickstart"
+	echo "> pip install gunicorn"
+	echo "> gunicorn -w 4 main"
+	`open "https://gunicorn.org/#quickstart"`
+	exit 1
+fi
+
+if [ -z "$ADDRESS" ] ;then
+	# Default Address
+	ADDRESS='127.0.0.1:8080'
+fi
+
+gunicorn -w "$WORKER" -b "$ADDRESS" "$PROGRAM"
+
+        

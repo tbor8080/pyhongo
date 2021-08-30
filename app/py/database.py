@@ -1,8 +1,28 @@
 # /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import inspect
-import sqlite3,pycopg2
+def ErrorMessage(modulename=None):
+    print(f'Import Can\'t Module "{modulename}"')
+    print('Read the .md file')
+    print('pip -r requirements.txt')
+
+import inspect,sqlite3
+# load module 
+
+try:
+    # PostgreSQL
+    import psycopg2
+except ModuleNotFoundError as e:
+    ErrorMessage('psycopg2')
+    exit()
+
+try:
+    # MySQL
+    import pymysql
+except ModuleNotFoundError as e:
+    ErrorMessage('MySQLdb')
+    exit()
+
 from py.sql import *
 
 class Database(ForSQL):
@@ -29,15 +49,21 @@ class Database(ForSQL):
     
     def setType(self,types):
         self.dbtype=types
+    
+    def getPackage(self):
+        return self.__package
+
+    def setPackage(self,**package):
+        self.__package=package
 
     def getHost(self):
         return self.host
-    
-    def getPort(self):
-        return self.port
 
     def setHost(self,host=None):
         self.host=host
+    
+    def getPort(self):
+        return self.port
     
     def setPort(self,port=None):
         self.port=port
@@ -62,7 +88,13 @@ class Database(ForSQL):
         if self.getType():
             return True
         return False
+    
+    def getUser(self):
+        return (self.__user,self.__password)
 
+    def setUser(self,user=(None,None)):
+        (self.__user,self.__password)=user
+    
 ######################################################################################################
 
 class FileinFlask(Database):
@@ -120,48 +152,96 @@ class SelectSQLite3(Database):
             self.createDatabase()
 
     def createDatabase(self):
-        self._connect()
-        self._close()
+        self.__connect()
+        self.__close()
         pass
 
-    def _connect(self):
-        self.conn=None
-        if self.getType():
-            self.conn=sqlite3.connect(self.getDatabaseName())
-        return self.conn
+    def test(self):
+        self.__connect()
+        self.__close()
 
-    def _cursor(self):
-        self.csr=None
-        if self.getType() and self.conn is not None:
-            self.csr=self.conn.cursor()
-        return self.csr
+    def __connect(self):
+        self.connection=None
+        self.connection=sqlite3.connect(self.getDatabaseName())
+        return self.connection
 
-    def _close(self):
-        if self.conn is not None:
-            self.conn.close()
+    def __cursor(self):
+        return self.connection.cursor()
 
-class SelectMySQL(Database):
-    """MySQL:
-    """
-    __package__='__mysql__'
-    def __init__(self,dbtype=False,dbname='sample_mysql'):
-        super().__init__(dbtype,dbname)
-
-    def getHost(self):
-        return self.host
-
-    def setHost(self, host='127.0.0.1'):
-        return self.host
+    def __close(self):
+        self.connection.close()
 
 class SelectPgSQL(Database):
-    """PostgresSQL:
+    """
+    PostgresSQL:
+        [how to install]
+        <homebrew ver.> - 
+        $ brew install postgresql
+        $ brew service (start | stop) postgresql
+        [psql(database connection)]
+        $ psql --V
+        $ psql --help
+        $ psql -d postgres -U [username] -W [password]
+        [psql console]
+        > ¥h
+            - help
+        > ¥dt
+            - table info
+        > select verison();
+            - postgres install version
+        > ¥q
+            - quit
+
     """
     __package__='__pgsql__'
-    def __init__(self,dbtype=False,dbname='sample_pgsql'):
+    __config__={}
+
+    def __init__(self,dbtype=False,dbname='sample_pgsql',host='localhost',**kwargs):
         super().__init__(dbtype,dbname)
+        self.setHost(host)
+        try:
+            self.setUser(kwargs['user'])
+        except KeyError:
+            pass
 
-    def getHost(self):
-        return self.host
+        self.setDatabaseName(dbname)
+        self.__config(dbtype)
+    
+    def pg_config(self):
+        return self.__config__
 
-    def setHost(self, host='127.0.0.1'):
-        return self.host
+    def __config(self,dbtype):
+        self.__config__['user']=self.getUser()
+        self.__config__['host']=self.getHost()
+        self.__config__['dbname']=self.getDatabaseName()
+        self.__config__['dbtype']=(dbtype,self.__package__.replace('__',''))
+
+    def test(self):
+        try:
+            self.__connect()
+            cur=self.__cursor()
+            cur.execute('select version();')
+            print(cur.fetchall())
+            self.__close()
+        except ModuleNotFoundError:
+            print('Database connection failed.')
+
+    def __connect(self):
+        usertext=''
+        try:
+            (user,password)=self.getUser()
+            if user is not None:
+                usertext=f' user={user}'
+                if password is not None or password!='':
+                    usertext+=f' password={password}'
+        except AttributeError:
+            print('Postgres User is not set.')
+
+        self.connection=psycopg2.connect(f'host={self.getHost()} dbname={self.getDatabaseName()}{usertext}')
+        return self.connection
+    
+    def __cursor(self):
+        return self.connection.cursor()
+
+    def __close(self):
+        self.connection.close()

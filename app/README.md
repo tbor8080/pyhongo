@@ -1,15 +1,32 @@
+# Readme.md
 
-[ Update ]:
+	+ Automamtion Web Application Code
+		- Now > CLI
 
-    Next Update to 2021.08.28
+#### [ Update ]:
 
-[ How to Install ]:
+    Update: 2021.08.23
+    < Next Update to 2021.08.28 >
+
+## Quick Start Application
+
+    - Access Github Repository:
+        - https://github.com/tbor8080/
+
+        + [https] 
+            > git clone https://github.com/tbor8080/pyhongo.git
+        + [github CLI] 
+            > gh repo clone tbor8080/pyhongo
+        
+    - Open the "Terminal(Linux/OSX) | Command Prompt(Windows)"
+
+### [ How to Install ]:
 
     > python -m venv <VENV Directory Name>
     > pip -r requirements.txt
     > python ./installer.py
 
-[ Document Root ]:
+### [ Change Document Root ( doc_root ) ]:
 
     Open Editor(VsCode etc...) > installer.py
     Edit to variable < doc_root > is Your Enviroment.
@@ -19,8 +36,9 @@
 
     > python ./installer.py
 
-a little bit...
-    .... install success!!!
+    wait a little bit, ... install ....
+    Success the Project File in installer.sh [directory]
+        > [first_flask_app] directory
 
     Coding Python File
         - install directory(document_root)
@@ -29,4 +47,6 @@ a little bit...
     write the host access.
     Go to Web browser!!
 
-Thanx :)
+***
+
+##### Cloned Thanx :) 

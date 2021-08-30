@@ -28,11 +28,11 @@ dbname='None'
 tbl=[]
 
 # Flask Instanse
-app=Flask(__name__)
+application=Flask(__name__)
         
 # ======================================== routing start
 
-@app.route('/')
+@application.route('/')
 def index():
         
     return render_template(
@@ -44,7 +44,7 @@ def index():
         
 # ======================================== routing start
 
-@app.route('/main')
+@application.route('/main')
 def main():
         
     return render_template(
@@ -56,7 +56,7 @@ def main():
         
 # ======================================== routing start
 
-@app.route('/test')
+@application.route('/test')
 def test():
         
     return render_template(
@@ -70,4 +70,4 @@ def test():
 # run to app
 # browser access <Your Host&Port>
 if __name__=="__main__":
-    app.run(debug=debug, port=port)
+    application.run(debug=debug, port=port)

@@ -13,13 +13,6 @@ except ModuleNotFoundError:
     # print('pip install mysqlclient')
     pass
 
-try:
-    # PostgreSQL
-    import psycopg2
-except ModuleNotFoundError as e:
-    ErrorMessage('psycopg2')
-    exit()
-
 
 # Base Class
 class DatabaseManagement(Database,WebApp):
@@ -32,11 +25,10 @@ class DatabaseManagement(Database,WebApp):
         super().__init__(port,dbname)
         self.config()
         
-    def config(self,host=None,port=None,dbname=None,**kwargs):
+    def config(self,host=None,port=None,dbname=None):
         self.setHost(host)
         self.setPort(port)
         self.setDatabaseName(dbname)
-        # self.setUser(kwargs['user'])
 
     def open(self):
         self.window()
@@ -46,6 +38,12 @@ class DatabaseManagement(Database,WebApp):
         root.geometry('800x300')
         root.mainloop()
 
+    def _onClick(self,e):
+        pass
+    
+    def _onKeyboard(self,e):
+        pass
+    
     def asOpen(self):
         wd=self.getCurrentDirectory()
         return fd.askopenfilename(filetypes=self.filetype,initialdir=wd)
@@ -60,26 +58,26 @@ class SQLiteWindow(DatabaseManagement):
         super().__init__(host,port,dbname)
 
     def window(self):
-        self._root=tk.Tk()
-
-        self._root.title('SQLite Exproler')
-        self._root.geometry('1024x768')
+        root=tk.Tk()
+        self._root=root
+        root.title('SQLite Exproler')
+        root.geometry('1024x768')
 
         self.lists=[]
         self.file=None
 
-        self.sqliteBrowser(self._root)
+        self.sqliteBrowser(root)
         # view result table name & column name
-        self.sqlCodeFrame(self._root)
+        self.sqlCodeFrame(root)
         
         # view result table name
-        self.viewSQLTextAndListFrame(self._root)
+        self.viewSQLTextAndListFrame(root)
 
         # view list: viewTableForSQL()
-        self.viewTableFrame(self._root)
+        self.viewTableFrame(root)
 
         self.setLayout()
-        self._root.mainloop()
+        root.mainloop()
         
     
     def sqlCodeinEntry(self,root=None,handler=None):
@@ -331,156 +329,39 @@ class SQLiteWindow(DatabaseManagement):
     def cursor(self,conn=None):
         return self.connect().cursor()
 
-class PgSQLWindow(SelectPgSQL):
-    __config__={}
-    def __init__(self,arg=None):
-        # super().__init__(host=None,)
-        self.__config__=arg.pg_config()
-        self.window()
-
-    def user(self):
-        return self.__config__['user']
-    
-    def dbname(self):
-        return self.__config__['dbname']
-    
-    def host(self):
-        return self.__config__['host']
-
-    def open(self):
-        self._root.mainloop()
-
-    def window(self):
-        self._root=tk.Tk()
-        self._root.geometry('720x480')
-        self._root.title('PostgreSQL Browser')
-        self.browser()
-        self.panel()
-        self.setLayout()
-
-    def browser(self):
-        self.frame=tk.Frame(self._root)
-    
-    def panel(self):
-        (self.__user,self.__password)=self.user()
-        title=f'username[{self.__user}]'
-        self.__usernameLabel=tk.Label(self.frame,text=title)
-        
-        title=f'password[{str(self.__password)}]'
-        self.__passwordLabel=tk.Label(self.frame,text=title)
-
-        title=f'Database Name[{str(self.dbname())}]'
-        self.__dbnameLabel=tk.Label(self.frame,text=title)
-
-        title=f'TEST CODE'
-        self.__testCode=tk.Entry(self.frame,text=title)
-
-        message='Push the Connection Test'
-        self.__testButton=tk.Button(self.frame,text=message)
-        self.__testButton.bind('<1>',self.click_test_btn)
-    
-    def click_test_btn(self,e):
-        self.__connect()
-        self.cur=self.__cursor()
-        self.cur.execute('select version();')
-        self.cur.execute('\\l')
-        self.response=self.cur.fetchall()
-        self.__close()
-        print(self.response)
-        self.__testCode.delete(0,tk.END)
-        self.__testCode.insert(tk.END,('success!',self.response))
-
-    def setLayout(self):
-        # self.frame.configure()
-        self.__usernameLabel.grid(column=0,row=0)
-        self.__passwordLabel.grid(column=1,row=0)
-        self.__testButton.grid(columnspan=2,row=1)
-        self.__testCode.grid(columnspan=2,row=2)
-        self.__dbnameLabel.grid(columnspan=2,row=3)
-        # self.__passwordEntry.grid(column=1,row=1)
-        self.frame.grid(column=0,row=0)
-
-    def __connect(self):
-        usertext=''
-        try:
-            (user,password)=self.user()
-            if user is not None:
-                usertext=f' user={user}'
-                if password is not None or password!='':
-                    usertext+=f' password={password}'
-        except AttributeError:
-            print('Postgres User is not set.')
-        self.connection=psycopg2.connect(f'host=localhost dbname=test {usertext}')
-
-    def __cursor(self):
-        return self.connection.cursor()
-
-    def __close(self):
-        self.connection.close()
-
-#################################### GUI window program END
-
 class Loading:
 
-    def __init__(self,app=None,db=None):
+    def __init__(self,app=None):
         self.setApp(app)
-        if db is not None:
-            self.setDB(db)
     
     def getApp(self):
         return self.application
 
     def setApp(self,app=None):
         self.application=app
-    
-    def getDB(self):
-        return self.database
-
-    def setDB(self,db=None):
-        self.database=db
 
     def sqlite_onclick(self,e):
         window=SQLiteWindow()
         window.open()
-
-    def pgsql_onclick(self,e):
-        #print(self.getDB().pg_config())
-        window=PgSQLWindow(self.getDB())
-        window.open()
         
+
     def onclick_flask_run(self,e):
         app=self.getApp()
-    
-    def onclick_gunicorn_run(self,e):
-        app=self.getApp()
+        app.run()
 
-    def run(self,app=None,db=None):
+    def run(self,app=None):
         #th_sqlite=Thread(target=self.sqlite_onclick)
         #th_flask=Thread(target=self.onclick_flask_run)
         #th_sqlite.start()
         #th_flask.start()
 
-        window=tk.Tk()
-
-        sqlite_button=tk.Button(window,text='SQLite explorer')
+        sqlite_button_window=tk.Tk()
+        sqlite_button=tk.Button(sqlite_button_window,text='sqlite exploer')
         sqlite_button.bind('<1>',self.sqlite_onclick)
-        
-
-        pgsql_button=tk.Button(window,text='Postgre SQL explorer')
-        pgsql_button.bind('<1>',self.pgsql_onclick)
-
-        flask_button=tk.Button(window,text='run the flask')
-        flask_button.bind('<1>',self.onclick_flask_run)
-
-        gunicorn_button=tk.Button(window,text='Gunicorn')
-        gunicorn_button.bind('<1>',self.onclick_gunicorn_run)
-        
-
-        # Layout
         sqlite_button.pack()
-        pgsql_button.pack()
-        flask_button.pack()
-        gunicorn_button.pack()
+
+        # flask_button=tk.Button(sqlite_button_window,text='run the flask')
+        # flask_button.bind('<1>',self.onclick_flask_run)
+        # flask_button.pack()
         
-        
-        window.mainloop()
+        sqlite_button_window.mainloop()

@@ -1,7 +1,7 @@
 # /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os,sys,datetime,subprocess
+import os,sys,datetime,subprocess,json
 from time import sleep
 try:
     from flask import Flask, render_template, request, redirect
@@ -42,6 +42,9 @@ class WebApp:
     }
     host='127.0.0.1'
 
+    def __init__(self):
+        self.setInstallOption()
+
     def getMethod(self,cls=None):
         if cls is not None:
             lists=[]
@@ -53,6 +56,7 @@ class WebApp:
                 lists.append(inspect.getmembers(cls)[i][0])
             classList[self.__class__.__name__]=tuple(lists)
             return classList
+
     def getInherit(self,cls):
         print(cls.__mro__)
 
@@ -102,8 +106,22 @@ class WebApp:
     def getJsonFile(self):
         return self.config_json
     
-    def setJsonFile(self,file):
+    def setJsonFile(self,file=None):
+        if file is None:
+            exit()
         self.config_json=file
+
+    def loadJson(self,filename=None):
+        if filename is None:
+            exit()
+        with open(filename,'rt') as fp:
+            return json.load(fp)
+    
+    def getGunicornFile(self):
+        return self.config_gunicorn
+    
+    def setGunicornFile(self,file):
+        self.config_gunicorn=file
     
     def getYAMLFile(self):
         return self.config_yaml
@@ -150,10 +168,10 @@ class WebApp:
                 fp.write(text)
 
     def run(self,file=None):
-        # execute python code
+        # command for .py file
         if file is None:
             file=self.getPyFile()
-            print(self.getPyFile())
+            # print(self.getPyFile())
         subprocess.call('python %s' % file, shell=True)
 
     def installAction(self,count):
@@ -191,13 +209,112 @@ class WebApp:
         # selenium code:
         driver=Chrome()
         driver.get(url)
+    
+    def gunicorn_start(self):
+        subprocess.call(f'{self.getInstallDir()}/gunicorn_start', shell=True)
+    
+    def setInstallOption(self):
+
+        self.__options={
+            "install":True,
+            "run":{
+                "flask":True,
+                "sqlite":False,
+                "gunicorn":False,
+                "browser":{
+                    "chrome":True,
+                    "firefox":False,
+                    "edge":False,
+                    "safari":False
+                }
+            }
+        }
+
+    # Switch the Install Option
+
+    def switch_to(self,types='install',options=(True,None)):
+        try:
+            if types=='install':
+                self.option()[types]
+            else:
+                self.option()['run'][types]
+            
+        except KeyError:
+            print(types,self.option())
+            print('Function : switch_to(type="install",option=(True,None))')
+            print('type="value" is "install" or "flask" or "browser" or "database(sqlite,mysql,psql)" or "gunicorn".')
+            exit()
+        
+        # print(options, type(options) is bool)
+
+        if type(options) is bool:
+            options=(options,None)
+
+        (flag,option)=options
+        result=None
+
+        if types=="install":
+            result=self.switch_installer(flag)
+        elif types=="flask":
+            result=self.switch_run_flask(flag)
+        elif types=="browser":
+            result=self.switch_run_browser(option, flag)
+        elif types=="sqlite":
+            result=self.switch_run_sql_exproler(types, flag)
+        elif types=='gunicorn':
+            result=self.switch_run_gunicorn(flag)
+        
+        return result
+        
+
+    def switch_installer(self,flag=True):
+
+        self.__options["install"]=flag
+        return self.__options["install"]
+
+    def switch_run_flask(self,flag=True):
+
+        self.__options["run"]["flask"]=flag
+        return self.__options["run"]["flask"]
+
+    def switch_run_browser(self,browser='chrome', flag=True):
+
+        try:
+            self.__options["run"]["browser"][browser]
+        except KeyError:
+            print('browser=(variable) is "chrome" or "firefox" or "edge" or "safari".',file=sys.stdout)
+            exit()
+
+        self.__options["run"]["browser"][browser]=flag
+        return self.__options["run"]["browser"][browser]
+    
+    def switch_run_gunicorn(self, flag=False):
+
+        self.__options["run"]["gunicorn"]=flag
+        return self.__options["run"]["gunicorn"]
+    
+    def switch_run_sql_exproler(self, database='sqlite', flag=False):
+        try:
+            self.__options["run"][database]
+        except KeyError:
+            print('database=(variable) is "sqlite" or "mysql" or "psql".',file=sys.stdout)
+            exit()
+
+        self.__options["run"][database]=flag
+        return self.__options["run"][database]
+
+    def option(self):
+        return self.__options
 
 class WebAppInDjango(WebApp):
     """
     WebApplication Templates in Django.
     """
     __package__='__django__'
+    def __init__(self):
+        super().__init__()
 
+# WebAppInFlask: Class
 class WebAppInFlask(WebApp):
 
     '''
@@ -248,7 +365,7 @@ class WebAppInFlask(WebApp):
     __package__='__webapp__'
 
     def __init__(self, db=False):
-
+        super().__init__()
         # print(db.getType())
         self.db=db
         self.appType(self.db)
@@ -355,32 +472,31 @@ class WebAppInFlask(WebApp):
         img=static+self.__install__['directory'][5]
 
         self.setJsonFile(filename)
-        text='\t{\n'
+        text='{\n'
         text+=f'''
-            "tmpl_file":"{self.getTmplFile()}",
-            "host":"{self.getHost()}",
-            "port":"{self.getPort()}",
-            "appname":"{self.getTitle()}",
-            "dbtype":"{self.getType()}",
-            "dbname":"{self.getDatabaseName()}",
-            "dbtbl":{self.getTable()},
-            "apppath":"{self.getCurrentDirectory()}",
-            "doc_root":"{self.getDocumentRoot()}",
-            "directory":'''
-        text+='''{
-            '''
-        text+=f'''"database":"{database_dir}",
-                "templates":"{templates}",
-                "static": "{static}",
-                "javascript":"{javascript}",
-                "css":"{css}",
-                "img":"{img}"'''
-        text+='''},
-        '''
+    "host":"{self.getHost()}",
+    "port":"{self.getPort()}",
+    "dbtype":"{self.getType()}",
+    "dbname":"{self.getDatabaseName()}",
+    "dbtbl":{self.getTable()},
+    "appname":"{self.getTitle()}",
+    "app_path":"{self.getCurrentDirectory()}",
+    "app_routing":"{self.getRoute()}",
+    "doc_root":"{self.getDocumentRoot()}",
+    "py_file":"{self.getPyFile()}",
+    "gunicorn":"{self.getGunicornFile()}",
+    "directory":'''
+        text+='''{'''
         text+=f'''
-        "route":"{self.getRoute()}"
-        '''
-        text+='}\n'
+        "database":"{database_dir}",
+        "tmpl_file":"{self.getTmplFile()}",
+        "templates":"{templates}",
+        "static": "{static}",
+        "javascript":"{javascript}",
+        "css":"{css}",
+        "img":"{img}"'''
+        text+='''\n\t}\n'''
+        text+='\n}\n'
         return text
     
     def setCodeYAML(self):
@@ -427,6 +543,54 @@ conn.close()'''
     def setImportModule(self,module=['os','sys','datetime']):
         self.importModule=module
 
+    def setCodeGunicorn(self):
+        self.setGunicornFile('gunicorn_start')
+        source='''# Input Your Setting:
+# Read the gunicorn Documents
+# - (https://gunicorn.org/#quickstart)
+#
+#  Example 1)
+#	+ main.py in app=Flask(__name__)
+#		>> PROGRAM="main:app"
+#
+#  Example 2)
+#	+ main.py in application=Flask(__name__)
+#		>> PROGRAM="main"
+#               or
+#       >> PROGRAM="main:application"
+
+PROGRAM="main"
+
+# Input Your Host & Port Number:
+ADDRESS="127.0.0.1:8080"
+
+# WORKER
+WORKER=2
+
+cd `dirname $0`
+
+GUNICORN_COMMAND=`which gunicorn`
+
+if [ "$GUNICORN_COMMAND" = "" ] ;then
+	echo "- command not found ( at gunicorn ) "
+	echo "- install gunicorn, read the document."
+	echo "- https://gunicorn.org/#quickstart"
+	echo "> pip install gunicorn"
+	echo "> gunicorn -w 4 main"
+	`open "https://gunicorn.org/#quickstart"`
+	exit 1
+fi
+
+if [ -z "$ADDRESS" ] ;then
+	# Default Address
+	ADDRESS='127.0.0.1:8080'
+fi
+
+gunicorn -w "$WORKER" -b "$ADDRESS" "$PROGRAM"
+
+        '''
+        return source
+
     def setCodePy(self):
         filename='main.py'
         self.setComment('This code was created by Automation tools')
@@ -465,18 +629,18 @@ dbname='{self.getDatabaseName()}'
 tbl={self.getTable()}
 
 # Flask Instanse
-app=Flask(__name__)
+application=Flask(__name__)
 '''
         # for Loop(Flask Routing)
         for rt in self.route:
-            print(rt['path'])
+            # print(rt['path'])
             method=''
             if 'method' in rt:
                 method=',methods=[\''+rt['method']+'\']'
             text+=f'''        
 # ======================================== routing start
 
-@app.route('{rt['path']}'{method})
+@application.route('{rt['path']}'{method})
 def {rt['function']}():'''
             if self.getType()=='sqlite':
                 text+=self.setCodeSqlite()
@@ -496,7 +660,7 @@ def {rt['function']}():'''
 # run to app
 # browser access <Your Host&Port>
 if __name__=="__main__":
-    app.run(debug=debug, port=port)
+    application.run(debug=debug, port=port)
 '''
         # Please, Typing a command line tools(right here) >python main.py
         # success 
@@ -561,7 +725,7 @@ if __name__=="__main__":
 
         dir=self.getInstallDir()
 
-        log_file=dir+'/install.log'
+        
         log_text='*********************************************************************\n'
         log_text+=f'Install to "{self.getInstallDir()}" Directory\n'
         log_text+='*********************************************************************\n'
@@ -574,7 +738,7 @@ if __name__=="__main__":
         # self.setPyFile(file)
         self.write(self.getPyFile(),text)
         
-        log_text='create python program > '+self.getPyFile()
+        log_text='+ create python program > '+self.getPyFile()
         print(log_text)
         log_file_text+=log_text
         
@@ -585,25 +749,45 @@ if __name__=="__main__":
         # self.write(self.getYAMLFile(),text)
         # print('\ncreate config > ',self.getYAMLFile())
 
+        # manage directory
+        manage=dir+'/manage'
+        self.makeDir(manage)
+
+        # install log 
+        log_file=manage+'/install.log'
+
+        # gunicorn file
+        text=self.setCodeGunicorn()
+        file=dir+'/'+self.getGunicornFile()
+        self.setGunicornFile(file)
+        self.write(self.getGunicornFile(),text)
+        subprocess.call('chmod 755 %s' % file, shell=True)
+        log_text='\n+ create config(gunicorn) > '+self.getGunicornFile()
+        print(log_text,end='')
+        log_file_text+=log_text
+
+        # config json
         text=self.setCodeJson()
-        file=dir+'/'+self.getJsonFile()
+        file=manage+'/'+self.getJsonFile()
         self.setJsonFile(file)
         self.write(self.getJsonFile(),text)
-        log_text='\ncreate config > '+self.getJsonFile()
+        log_text='\n+ create config > '+self.getJsonFile()
         print(log_text)
         log_file_text+=log_text
+
+        self.installAction(15)
 
         text=self.setCodeHtml()
 
         templates=dir+'/templates'
         self.makeDir(templates)
-        log_text='\ncreate template directory:'+templates
-        print(log_text)
+        log_text='\n+ create template directory:'+templates
+        print(log_text,end='')
         log_file_text+=log_text
 
         tmpl_file=templates+'/'+self.getTmplFile()
         self.write(tmpl_file, text)
-        log_text='\ncreate template file:'+tmpl_file
+        log_text='\n+ create template file:'+tmpl_file
         print(log_text)
         log_file_text+=log_text
 
@@ -611,38 +795,44 @@ if __name__=="__main__":
 
         static=dir+'/static'
         self.makeDir(static)
-        log_text='\ncreate static directory:'+static
-        print(log_text)
+        log_text='\n+ create static directory:'+static
+        print(log_text,end='')
         log_file_text+=log_text
 
         javascript=static+'/javascript'
         self.makeDir(javascript)
-        log_text='\ncreate javascript directory:'+javascript
-        print(log_text)
+        log_text='\n+ create javascript directory:'+javascript
+        print(log_text,end='')
         log_file_text+=log_text
         
         css=static+'/css'
         self.makeDir(css)
-        log_text='\ncreate css directory:'+css
-        print(log_text)
+        log_text='\n+ create css directory:'+css
+        print(log_text,end='')
         log_file_text+=log_text
 
         img=static+'/img'
         self.makeDir(img)
-        log_text='\ncreate img directory:'+img
+        log_text='\n+ create img directory:'+img
         print(log_text)
         log_file_text+=log_text
 
         self.installAction(20)
+
         log_text='\n'
-        print(log_text)
+        print(log_text,end='')
         log_file_text+=log_text
 
-        success=f'''install success !!!
+        success=f'''+ Install Finish and Success !!!
         =================================================
-        write to Python(WebApp) code !!! :)
-        > {self.getPyFile()}
-        
+        >> Start Coding Python(WebApp) {self.getPyFile()} !!! :)
+        > Project Directory: {self.getInstallDir()}
+        > Python File: {self.getPyFile()}
+        >> For Command:
+        >       $python {self.getPyFile()}
+        >> Gunicorn Server Start(OSX/Linux):
+        > {self.getGunicornFile()}
+        >> install log: {log_file}
         =================================================
         '''
         log_text=success
@@ -652,3 +842,9 @@ if __name__=="__main__":
 
 #####################################################################################
 
+class ShoppingCart(WebAppInFlask):
+    def __init__(self):
+        super.__init__()
+    
+    def setCodePy(self):
+        pass

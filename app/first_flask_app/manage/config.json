@@ -1,0 +1,24 @@
+{
+
+    "host":"127.0.0.1",
+    "port":"5000",
+    "dbtype":"False",
+    "dbname":"None",
+    "dbtbl":[],
+    "appname":"Automatic Create WebApp",
+    "app_path":"/Users/ryohei/Desktop/program/Py/PySeisaku/webapp/app",
+    "app_routing":"[{'path': '/', 'function': 'index', 'code': 'hello="Hello."'}, {'path': '/main', 'function': 'main'}, {'path': '/test', 'function': 'test'}]",
+    "doc_root":"./first_flask_app",
+    "py_file":"./first_flask_app/main.py",
+    "gunicorn":"./first_flask_app/gunicorn_start",
+    "directory":{
+        "database":"./first_flask_app/database",
+        "tmpl_file":"main.html",
+        "templates":"./first_flask_app/templates",
+        "static": "./first_flask_app/static",
+        "javascript":"./first_flask_app/static/javascript",
+        "css":"./first_flask_app/static/css",
+        "img":"./first_flask_app/static/img"
+	}
+
+}
