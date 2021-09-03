@@ -38,14 +38,26 @@
 
     wait a little bit, ... install ....
     Success the Project File in installer.sh [directory]
-        > [first_flask_app] directory
+        > [first_flask_app] 
+            - install directory
 
     Coding Python File
         - install directory(document_root)
 
-    run the first Flask Application(WSGI)
-    write the host access.
-    Go to Web browser!!
+    run the [ Flask Application(WSGI)]
+        + default:
+            $ python [./first_flask_app]/main.py
+        + go to browser:
+            default: http://127.0.0.1:5000/
+
+    run the [ Gunicorn ]
+        + default:
+            $ cd [./first_flask_app/]
+            $ ./gunicorn_start
+        + go to browser:
+            default: http://127.0.0.1:8080/
+
+    Go to access, Web browser!!
 
 ***
 

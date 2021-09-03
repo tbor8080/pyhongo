@@ -22,7 +22,7 @@ tmpl_file="main.html" # Path: ./first_flask_app/templates/main.html
 page_title='Automatic Create WebApp'
 
 # DB Name
-dbname='None'
+dbname='test'
 
 #Table Name
 tbl=[]

@@ -1,4 +1,4 @@
-
+import os,sys,datetime,json,random
 
 debug_mode=True
 
@@ -24,13 +24,46 @@ class User:
     def __init__(self):
         pass
     
-    def get(self):
+    def get(self,id=None,key=None):
         return self.__user__
 
-    def create(self,firstname=None,lastname=None,nickname=None):
+        if type(id) is str and id in self.id_list(key):
+            return self.__user__[id]
+    
+    def localize(self,lang='ja'):
+        set.location=lang
+
+    def add(self,firstname=None,lastname=None,nickname=None):
+        self.setUserId()
+        self.setIndex()
         self.setName(firstname,lastname)
+        if nickname is None:
+            nickname=f'user_{str(len(self.get()))}'
+        self.setNickName(nickname)
+        self.setPrivate(True)
+        self.setKeys()
 
     def addProfile(self):
+        pass
+    
+    def id_list(self,key=None):
+        if key is None:
+            return tuple(self.__user__.keys())
+        return tuple(key.keys())
+    
+    def setKeys(self):
+        key_list=self.__user__.keys()
+        self.__list=tuple(key_list)
+
+    def setIndex(self):
+        self.__user__[self.getUserId()]['index']=len(self.__user__)
+
+    def getUserId(self):
+        return self.__uniqueid
+    
+    def setUserId(self):
+        self.__uniqueid=f'__user_{UniqueId().get()}'
+        self.__user__[self.__uniqueid]={'user_id':self.__uniqueid}
     
     def getClass(self):
         return self.__class__.__name__
@@ -41,7 +74,24 @@ class User:
     def setName(self,firstname=None,lastname=None):
         self.__name=None
         if firstname is not None and lastname is not None:
-            self.__user__['name']={'firstname':firstname,'lastname':lastname}
+            self.__user__[self.getUserId()]['name']={
+                'firstname':self.shadow(firstname),
+                'lastname':self.shadow(lastname),
+            }
+
+    def setNickName(self,nickname=None):
+        if nickname is not None:
+            self.__user__[self.getUserId()]['nickname']=self.shadow(nickname)
+    
+    def shadow(self,arg=None):
+        (string,dummy)='',''
+        for chars in range(len(arg)):
+            if chars > 0:
+                string+='-'
+            seed=random.randint(0,7)
+            string+=str(f'{ord(arg[chars])}:{seed}')
+            dummy+=chr(ord(arg[chars])+seed)
+        return {'*':'*'*len(arg),'charcode':string,'data':arg,'dummy':dummy,}
     
     def getSex(self):
         return self.__sex
@@ -64,8 +114,8 @@ class User:
     def getPrivate(self):
         return self.private
 
-    def setPribate(self,privary=True):
-        self.private=privacy
+    def setPrivate(self,privacy=True):
+        self.__user__[self.getUserId()]['private']=privacy
 
     def setLanguage(self,lang=None):
         if lang is not None:
@@ -76,19 +126,57 @@ class User:
 
 class Password:
 
-    __password__=''
+    __password__={
+        'text':None,
+        'seed':'seed:abcdefghijklmnopqrstuvwxyz01234567890-_*',
+    }
 
     def __init__(self):
         pass
     
-    def create(self):
-        pass
+    def create(self,password=None,num=8):
+        if password is None:
+            exit()
+        if len(password)<num:
+            print(f'Password length more than {num} Charactors.')
+            exit()
+        text+='*'*len(password)
+        self.__password__['shadow']=text
+        self.__password__['text']
     
     def get(self):
         pass
     
+    def encrypt(self):
+        random_num=ramdom.randint(0,len(self.__password__)-1)
+    
+    def shadow(self):
+        pass
+    
+    def save(self,filename='user.json',data=None):
+        with open(filename,'wt') as fp:
+            json.dump(data,fp,indent=4,ensure_ascii=False)
 
-class Ryohei(User):
+class UniqueId:
+    __alphabet='abcderghtjklmnopqrstuvwxyz01234567890_'
+    def __init__(self):
+        self.set()
+
+    def set(self):
+        char=''
+        for i in range(16):
+            num=random.randint(0,len(self.__alphabet)-1)
+            char+=self.__alphabet[num]
+        self.__unique=char
+
+    def get(self):
+        self.set()
+        return self.__unique
+    
+    def encode(self):
+        pass
+
+class Login(User):
     def __init__(self):
         super().__init__()
 
@@ -101,7 +189,16 @@ class Login(User,Password):
 
 def Debug():
     if debug_mode:
-        people=Ryohei().create('Ryohei','Suga')
-        print(Ryohei().get())
+        if len(User().get()) == 0:
+            User().add('webapp','user')
+            User().add('webapp','user')
+            print(Login().get())
+            Login().save(data=Login().get())
+            pass
+        with open('user.json','rt') as fp:
+            data=json.load(fp)
+        key=list(User().id_list(data))
+        search_id='__user_rd1tog9gmtrt46tt'
+        print(search_id in key,User().id_list(data))
     
 Debug()

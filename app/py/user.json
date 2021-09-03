@@ -1,0 +1,52 @@
+{
+    "__user_00gnl39t5rezt030": {
+        "user_id": "__user_00gnl39t5rezt030",
+        "index": 1,
+        "name": {
+            "firstname": {
+                "*": "******",
+                "charcode": "119:0-101:2-98:5-97:3-112:5-112:3",
+                "data": "webapp",
+                "dummy": "wggdus"
+            },
+            "lastname": {
+                "*": "****",
+                "charcode": "117:5-115:5-101:2-114:7",
+                "data": "user",
+                "dummy": "zxgy"
+            }
+        },
+        "nickname": {
+            "*": "******",
+            "charcode": "117:1-115:3-101:2-114:7-95:0-49:0",
+            "data": "user_1",
+            "dummy": "vvgy_1"
+        },
+        "private": true
+    },
+    "__user_erh_g4rtbprzaagt": {
+        "user_id": "__user_erh_g4rtbprzaagt",
+        "index": 2,
+        "name": {
+            "firstname": {
+                "*": "******",
+                "charcode": "119:2-101:7-98:4-97:4-112:2-112:6",
+                "data": "webapp",
+                "dummy": "ylferv"
+            },
+            "lastname": {
+                "*": "****",
+                "charcode": "117:7-115:6-101:1-114:6",
+                "data": "user",
+                "dummy": "|yfx"
+            }
+        },
+        "nickname": {
+            "*": "******",
+            "charcode": "117:2-115:2-101:5-114:6-95:2-50:1",
+            "data": "user_2",
+            "dummy": "wujxa3"
+        },
+        "private": true
+    }
+}

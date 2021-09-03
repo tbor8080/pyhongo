@@ -1,4 +1,4 @@
-# Input Your Setting:
+# Input Your Setting(gunicorn_start):
 # Read the gunicorn Documents
 # - (https://gunicorn.org/#quickstart)
 #
@@ -11,11 +11,17 @@
 #		>> PROGRAM="main"
 #               or
 #       >> PROGRAM="main:application"
+#
 
 PROGRAM="main"
 
+# ACCESSLOG
+ACCESSLOG="/Users/ryohei/Desktop/program/Py/PySeisaku/webapp/app/first_flask_app/manage/logs/gunicorn_access_log"
+# ERRORLOG
+ERRORLOG="/Users/ryohei/Desktop/program/Py/PySeisaku/webapp/app/first_flask_app/manage/logs/gunicorn_error_log"
+
 # Input Your Host & Port Number:
-ADDRESS="127.0.0.1:8080"
+ADDRESS="127.0.0.1:5001"
 
 # WORKER
 WORKER=2
@@ -39,6 +45,6 @@ if [ -z "$ADDRESS" ] ;then
 	ADDRESS='127.0.0.1:8080'
 fi
 
-gunicorn -w "$WORKER" -b "$ADDRESS" "$PROGRAM"
+gunicorn -w "$WORKER" -b "$ADDRESS" --access-logfile "$ACCESSLOG" --error-logfile "$ERRORLOG" "$PROGRAM"
 
         

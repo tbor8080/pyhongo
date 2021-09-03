@@ -8,6 +8,7 @@ def ErrorMessage(modulename=None):
 
 import inspect,sqlite3
 # load module 
+from py.sheet.sheet import *
 
 try:
     # PostgreSQL
@@ -36,13 +37,19 @@ class Database(ForSQL):
         'directory':['/database/']
     }
 
-    def __init__(self, dbtype=True, dbname=None):
+    __config__={}
+
+    def __init__(self, dbtype=None, dbname=None):
+
         self.setType(dbtype)
         self.setDatabaseName(dbname)
         super().__init__()
     
     def className(self):
         return self.__class__.__name__
+    
+    def __config(self):
+        pass
 
     def getType(self):
         return self.dbtype
@@ -68,6 +75,9 @@ class Database(ForSQL):
     def setPort(self,port=None):
         self.port=port
 
+    def getDatabase(self):
+        return self.dbtype
+
     def getDatabaseName(self):
         return self.dbname
     
@@ -84,9 +94,16 @@ class Database(ForSQL):
     def setInstallDir(self,document_root='./data'):
         self.__install__['document_root']=document_root
 
-    def isDatabase(self):
-        if self.getType():
-            return True
+    def isPgSQL(self):
+        return False
+    
+    def isMySQL(self):
+        return False 
+    
+    def isSQLite(self):
+        return False
+    
+    def asStoredText(self):
         return False
     
     def getUser(self):
@@ -107,22 +124,21 @@ class FileinFlask(Database):
         - save: Save File method
     """
     __package__='__file__'
-
+    __config__={}
     matrixData=[]
 
     def __init__(self,dbtype=False,dbname='sample.txt'):
         super().__init__(dbtype,dbname)
         self.setFile(dbname)
     
+    def asStoredText(self):
+        return True
+    
     def getFile(self):
         return self.filename
     
     def setFile(self,filename='sample.csv'):
         self.filename=filename
-
-    def appendMatrix(self,x,y,data):
-        self.matrixData.append(x)
-        self.matrixData[x].append(y)
 
     def saveCsv(self,column=[]):
         text=''
@@ -143,27 +159,47 @@ class SelectSQLite3(Database):
             - Sub Class: SelectSQLite3
     """
     __package__='__sqlite__'
+    __config__={}
 
-    def __init__(self,dbtype=True,dbname=None):
+    def __init__(self,dbtype=None,dbname=None):
         super().__init__(dbtype,dbname)
+        
+        if dbname is None:
+            exit()
+
         self.setType(dbtype)
-        if dbname is not None:
-            self.setDatabaseName(dbname)
-            self.createDatabase()
+        self.setDatabaseName(dbname)
+
+        if self.test() is False:
+            print('+ Database Test Is Failed.')
+            exit()
+
+    def isSQLite(self):
+        return True
+
+    def sqlite_config(self):
+        return self.__config__
+
+    def __config(self):
+        self.__config['sqlite']=self.isSQLite()
+        self.__config['dbname']=self.getDatabaseName()
+        self.__config['dbtype']=self.getType()
 
     def createDatabase(self):
-        self.__connect()
-        self.__close()
         pass
 
     def test(self):
         self.__connect()
+        cur=self.cursor().execute('select sqlite_version();')
+        response=cur.fetchall()
         self.__close()
+        if len(response) > 0:
+            return True
+        return False
 
     def __connect(self):
         self.connection=None
         self.connection=sqlite3.connect(self.getDatabaseName())
-        return self.connection
 
     def __cursor(self):
         return self.connection.cursor()
@@ -196,35 +232,54 @@ class SelectPgSQL(Database):
     __package__='__pgsql__'
     __config__={}
 
-    def __init__(self,dbtype=False,dbname='sample_pgsql',host='localhost',**kwargs):
+    def __init__(self,dbtype=None,dbname='sample_pgsql',**kwargs):
         super().__init__(dbtype,dbname)
-        self.setHost(host)
+
+        try:
+            self.setHost(kwargs['host'])
+        except KeyError:
+            self.setHost('localhost')
+
         try:
             self.setUser(kwargs['user'])
         except KeyError:
-            pass
+            self.setUser((None,None))
+        
+        try:
+            self.setPort(kwargs['port'])
+        except KeyError:
+            self.setPort(5432)
 
+        self.setType(dbtype)
         self.setDatabaseName(dbname)
-        self.__config(dbtype)
+
+        self.__config()
+    
+    def isPgSQL(self):
+        return True
     
     def pg_config(self):
         return self.__config__
 
-    def __config(self,dbtype):
+    def __config(self):
+        self.__config__['pgsql']=self.isPgSQL()
         self.__config__['user']=self.getUser()
         self.__config__['host']=self.getHost()
+        self.__config__['port']=self.getPort()
         self.__config__['dbname']=self.getDatabaseName()
-        self.__config__['dbtype']=(dbtype,self.__package__.replace('__',''))
+        self.__config__['dbtype']=self.getType()
 
-    def test(self):
+    def __test(self):
         try:
             self.__connect()
             cur=self.__cursor()
             cur.execute('select version();')
             print(cur.fetchall())
             self.__close()
+            return True
         except ModuleNotFoundError:
             print('Database connection failed.')
+        return False
 
     def __connect(self):
         usertext=''

@@ -3,7 +3,7 @@ from py.webapp import *
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.filedialog as fd
-import sqlite3
+import sqlite3,requests
 
 from threading import Thread
 
@@ -19,7 +19,10 @@ try:
 except ModuleNotFoundError as e:
     ErrorMessage('psycopg2')
     exit()
-
+try:
+    from selenium.webdriver import Chrome,ChromeOptions
+except ModuleNotFoundError:
+    print('Please "pip install selenium."')
 
 # Base Class
 class DatabaseManagement(Database,WebApp):
@@ -383,7 +386,7 @@ class PgSQLWindow(SelectPgSQL):
         self.__connect()
         self.cur=self.__cursor()
         self.cur.execute('select version();')
-        self.cur.execute('\\l')
+        self.cur.execute('')
         self.response=self.cur.fetchall()
         self.__close()
         print(self.response)
@@ -452,19 +455,66 @@ class Loading:
         app=self.getApp()
     
     def onclick_gunicorn_run(self,e):
-        app=self.getApp()
+        config=self.getApp().loadConfig()['gunicorn']
+        self.gunicorn_uri=f'http://{config["host"]}:{config["port"]}'
+        self.guincorn_file=self.getApp().getGunicornFile()
 
+        Thread(target=self.gunicorn_thread).start()
+        if self.driver is None:
+            print('Please wait. open Chrome.')
+            sleep(1)
+        Thread(target=self.chrome_thread).start()
+
+    def onclick_browser_run(self,e):
+        driver=Chrome()
+
+    def gunicorn_thread(self):
+        url=self.gunicorn_uri
+        doc_root=self.getApp().loadConfig()["doc_root"]
+        file=doc_root+'/'+self.guincorn_file
+        text=f'[gunicorn_get_start]:{url}\n'
+        try:
+            response=requests.get(url)
+            text+=f'[gunicorn_started::{response.status_code} OK]:{url}\n'
+        except requests.exceptions.ConnectionError:
+            subprocess.call(f'{file}', shell=True)
+            text+=f'[gunicorn_start::{response.status_code}] NG:{url} {file}\n'
+        self.app_logging(text)
+        
+    def chrome_thread(self):
+        url=self.gunicorn_uri
+        try:
+            response=requests.get(url)
+            if response.status_code==200:
+                if self.driver is not None:
+                    self.driver.quit()
+                self.driver=Chrome()
+                self.driver.get(url)    
+            else:
+                print('+ program abort: Chrome.')
+                exit()
+        except requests.exceptions.ConnectionError:
+            print(f'Connection refused.(url:{url})')
+    
+    def app_logging(self,text=None):
+        doc_root=self.getApp().loadConfig()["doc_root"]
+        app_log='/manage/logs/application_log'
+        log=self.getApp().loadConfig()["doc_root"]+app_log
+        with open(log,'a') as fp:
+            fp.write(text)
+        
     def run(self,app=None,db=None):
-        #th_sqlite=Thread(target=self.sqlite_onclick)
-        #th_flask=Thread(target=self.onclick_flask_run)
-        #th_sqlite.start()
-        #th_flask.start()
+
+        #th_sqlite=Thread(target=self.sqlite_onclick).start()
+        #th_flask=Thread(target=self.onclick_flask_run).start()
 
         window=tk.Tk()
+        window.title('webapp explorer hub')
+
+        config=self.getApp().loadConfig()['gunicorn']
 
         sqlite_button=tk.Button(window,text='SQLite explorer')
         sqlite_button.bind('<1>',self.sqlite_onclick)
-        
 
         pgsql_button=tk.Button(window,text='Postgre SQL explorer')
         pgsql_button.bind('<1>',self.pgsql_onclick)
@@ -472,15 +522,123 @@ class Loading:
         flask_button=tk.Button(window,text='run the flask')
         flask_button.bind('<1>',self.onclick_flask_run)
 
-        gunicorn_button=tk.Button(window,text='Gunicorn')
+        gunicorn_button=tk.Button(window,text=f'Gunicorn( port number:{config["host"]} )')
         gunicorn_button.bind('<1>',self.onclick_gunicorn_run)
+
+        self.driver=None
+        doc_button=tk.Button(window,text='Getting Start(Doc)')
+        doc_button.bind('<1>',self.onclick_doc_run)
         
 
         # Layout
         sqlite_button.pack()
         pgsql_button.pack()
-        flask_button.pack()
+        # flask_button.pack()
         gunicorn_button.pack()
-        
+        doc_button.pack()
         
         window.mainloop()
+
+    def onclick_doc_run(self,e):
+        self.getting_start()
+
+    def getting_start(self):
+        sharp='#'*128
+        getting_start=f'''{sharp}
+        [Homebrew]
+            + Document
+                - 
+            + install the application(postgres,sqlite,nginx,python,etc...)
+                $ brew search [application]
+                $ brew install [application]
+            <Example: postgres>
+                $ brew search postgres
+                $ brew install postgres
+            + start application( change configuretion to application documents )
+                $ brew services start [server application(nginx,postgres,etc...)]
+    {sharp}
+        [Python]
+    {sharp}
+            + set virtual env(Python 3.8)
+                $ python -m venv [ venv directory ] 
+                $ source ./[ venv directory ]/bin/activate
+                - (Windows is /bin to ¥Sctipts)
+            + Need to module install:
+                $ pip install -r requirements.txt
+
+            + Finish to Virtual ENV:
+                $ deactivate
+
+            + List the module(pip)
+                $ pip list
+    {sharp}
+        [PostgreSQL]
+    {sharp}
+        + install postgres : version management system apt-get etc...
+        + (Search)
+            $ which postgres
+        
+        + (console help)
+            $ psql --help
+        
+        + (Start Service)
+            + Linux        
+            $ service (start|restart|stop) postgres
+            + OSX/Linux
+            $ brew services (start|restart|stop) postgres
+        
+        + (console login)
+            $ psql -d <database name>
+                or
+            $ psql -d <database name> -U "username" -p
+    {sharp}
+        [nginx]
+        + (Search)
+            $ which nginx
+
+        + (Start Service)
+            $ brew services (start|restart|stop) nginx
+
+        + (console help)
+            $ nginx -h
+    {sharp}
+        [This Application]
+        + (Logfile):
+
+            + (install log)
+                - ./first_web_app/manage/logs/install.log
+
+            + ( gunicorn_accesslog )
+                - ./first_web_app/manage/logs/gunicorn_accesslog
+
+            + ( gunicorn_errorlog )
+                - ./first_web_app/manage/logs/gunicorn_errorlog
+
+            + ( flask_access_log )
+            + ( flask_error_log )
+
+        + (application)
+            + (start)
+                # move current directory
+                $ cd ./first_web_app/
+                # input command + return.(Flask Load)
+                $ python main.py
+                    or 
+                $ 
+
+            + (document root)
+                - ./first_web_app/ (default)
+                    
+
+                    - main.py(Flask Application)
+                    - gunicorn_start
+                        # start gunicorn @cli
+                        $ ./gunicorn_start
+            + (management file)
+                - ./first_web_app/manage (default)
+            + (static and template file)
+                - ./first_web_app/static (default)
+                - ./first_web_app/templates (default)
+                    - main.html (based by Bootstrap)
+        '''
+        print(getting_start)

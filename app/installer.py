@@ -4,6 +4,7 @@
 from py.webconfig import *
 from sqlite import *
 from threading import Thread
+import json
 
 ####################################################################################################
 # change at variable:doc_root etc...
@@ -18,12 +19,13 @@ web_title='Automatic Create WebApp'
 # For Python
 PyFile='main.py'
 
-# For HTML Template By Bootstrap
+# For HTML Template (by Bootstrap)
 TmplFile='main.html'
 
-# + for database: type is sqlite or postgres sql
-# User Account: password is None Type OK.
-# DatabaseUser=('username',None) or DatabaseUser=('username','')
+# + for database: type is sqlite or postgres sql(pgsql | psql)
+#   - User Account: password is None OK.(but database security is no good, a lot of risk.)
+#   - DatabaseUser=('<username>','<password>') or DatabaseUser=('<username>',None) or DatabaseUser=('<username>','')
+#   - <password> is more than 8 charactors.
 DatabaseUser=('ryohei',None)
 # Database Type is sqlite or pgsql or psql.
 # DatabaseType='sqlite' or DatabaseType='psql' or DatabaseType='pgsql'
@@ -48,6 +50,11 @@ __switch__={
     "browser":(True,'chrome')
 }
 
+# + save as installer.py, run the python script.(terminal,bash|zsh)
+#   - install directory chmod 755 <directory> 
+#   - $ python installer.py [press enter key]
+#   - start install ... please wait ... for a littie bit. 
+
 ####################################################################################################
 # installer.py: Function
 ####################################################################################################
@@ -55,7 +62,7 @@ __switch__={
 def createTable(db):
     database=db.getDatabaseName()
 
-    # Create Table Code
+    # Create Table
     db.setTableName('COMMODITY_LIST2')
     db.appendColumn(columnname='xxxx_id',datatype='INTEGER',const='NOT NULL',primarykey=('xxxx_id',True),unique=False)
     db.appendColumn(columnname='document_sample_name',datatype='TEXT')
@@ -68,11 +75,11 @@ def main():
     # Framework: Create WebApp:
     Instanse=WebAppConfig()
     # For SQLite Example
-    # Instanse.config(database='sqlite',dbname='sample.db',document_root=doc_root)
+    # Instanse.config(database=DatabaseType,dbname=DatabaseName,document_root=doc_root)
     # For PostgreSQL
     Instanse.config(database=DatabaseType,dbname=DatabaseName,user=DatabaseUser,document_root=doc_root)
     # Non Database Config Example
-    #Instanse.config(document_root=doc_root)
+    # Instanse.config(document_root=doc_root)
     
     (db,app)=Instanse.db(),Instanse.app()
     
@@ -97,16 +104,23 @@ def main():
 + Install Directory: {app.getInstallDir()} is exists.
 + Skip to app.install()
 ++++++++++++++++++++++++++++++++++++++++++++++++++++
-+ Do you want to delete the directory?
-+ Warning!!!! directory delete is command line. +
++ Would like to delete the directory?
++ Directory delete, warning.
 + $ rm -rf {app.getInstallDir()}
 +
 ++++++++++++++++++++++++++++++++++++++++++++++++++++"""
 
         print(error_message)
+        # debug code:
 
         json_file=app.getInstallDir()+'/manage/config.json'
         app.setJsonFile(json_file)
+
+        app.setGunicornFile('gunicorn_start')
+        app.setGunicorn()
+        # print(db.getType())
+        # app.appConfig()
+        
         # print(app.getJsonFile())
         # print(app.loadJson(app.getJsonFile()))
 
@@ -114,7 +128,7 @@ def main():
     # Look at Your Set Host & Port Number!!
     # And stay a little time, webdriver(chrome) run! (auto browse host (& port))
     
-    # Look at True or False
+    # Look at __switch__ variable True or False
     if app.switch_to('gunicorn',__switch__['gunicorn']):
         Thread(target=app.gunicorn_start).start()
 
@@ -144,6 +158,4 @@ def forDebug():
         Instanse.getInherit(eval(clsname))
 
 if __name__=='__main__':
-    main()
-    
-    
+    main()    

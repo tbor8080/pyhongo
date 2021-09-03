@@ -38,7 +38,7 @@ class WebApp:
 
     __install__={
         'document_root':'./applications',
-        'directory':['/database','/templates','/static','/javascript','/css','/img']
+        'directory':['/database','/templates','/static','/javascript','/css','/img','/manage','/logs'],
     }
     host='127.0.0.1'
 
@@ -117,11 +117,25 @@ class WebApp:
         with open(filename,'rt') as fp:
             return json.load(fp)
     
+    def getGunicorn(self):
+        return self.__gunicorn
+    
+    def setGunicorn(self,host='127.0.0.1',port=8080,worker=2,program='main'):
+        self.__gunicorn=(host,port,worker,program,self.getGunicornFile())
+        self.__install__['gunicorn']=self.__gunicorn
+
     def getGunicornFile(self):
         return self.config_gunicorn
     
-    def setGunicornFile(self,file):
+    def setGunicornFile(self,file=None):
         self.config_gunicorn=file
+    
+    def setGunicornLog(self,access_log=None,error_log=None):
+        self.access_log_gunicorn=access_log
+        self.error_log_gunicorn=error_log
+
+    def getGunicornLog(self):
+        return (self.access_log_gunicorn,self.error_log_gunicorn)
     
     def getYAMLFile(self):
         return self.config_yaml
@@ -297,7 +311,7 @@ class WebApp:
         try:
             self.__options["run"][database]
         except KeyError:
-            print('database=(variable) is "sqlite" or "mysql" or "psql".',file=sys.stdout)
+            print('database=(variable) is "sqlite" or "pgsql" or "psql".',file=sys.stdout)
             exit()
 
         self.__options["run"][database]=flag
@@ -373,13 +387,19 @@ class WebAppInFlask(WebApp):
         # {'path':'/','function':function}
         self.route=[]
         
-        self.title='SampleWebApp'
-        self.tmpl_file='main.html'
-
-        self.port=8080
-        self.host='127.0.0.1'
+        self.setTitle('SampleWebApp')
+        self.setTmplFile('main.html')
+        self.setPort(8080)
+        self.setHost('127.0.0.1')
         self.debug=False
 
+    def __initialize_app(self):
+
+        self.setTitle('SampleWebApp')
+        self.setTmplFile('main.html')
+        self.setPort(8080)
+        self.setHost('127.0.0.1')
+        self.debug=False
 
     def selectDataBase(self):
         pass
@@ -459,9 +479,16 @@ class WebAppInFlask(WebApp):
 
     def setComment(self,text):
         self.comment=text
+    
+    def loadConfig(self,filename=None):
+        if os.path.exists(self.getJsonFile()):
+            # print(self.getJsonFile())
+            with open(self.getJsonFile(),'rt') as fp:
+                data=fp.read()
+            return json.loads(data)
+        return {'result':'404 Not Found.'}
 
-    def setCodeJson(self):
-        filename='config.json'
+    def appConfig(self):
 
         doc_root=self.getDocumentRoot()
         database_dir=doc_root+self.__install__['directory'][0]
@@ -471,33 +498,48 @@ class WebAppInFlask(WebApp):
         css=static+self.__install__['directory'][4]
         img=static+self.__install__['directory'][5]
 
-        self.setJsonFile(filename)
-        text='{\n'
-        text+=f'''
-    "host":"{self.getHost()}",
-    "port":"{self.getPort()}",
-    "dbtype":"{self.getType()}",
-    "dbname":"{self.getDatabaseName()}",
-    "dbtbl":{self.getTable()},
-    "appname":"{self.getTitle()}",
-    "app_path":"{self.getCurrentDirectory()}",
-    "app_routing":"{self.getRoute()}",
-    "doc_root":"{self.getDocumentRoot()}",
-    "py_file":"{self.getPyFile()}",
-    "gunicorn":"{self.getGunicornFile()}",
-    "directory":'''
-        text+='''{'''
-        text+=f'''
-        "database":"{database_dir}",
-        "tmpl_file":"{self.getTmplFile()}",
-        "templates":"{templates}",
-        "static": "{static}",
-        "javascript":"{javascript}",
-        "css":"{css}",
-        "img":"{img}"'''
-        text+='''\n\t}\n'''
-        text+='\n}\n'
-        return text
+        self.__config={
+            'host':self.getHost(),
+            'port':self.getPort(),
+            'install_path':self.getCurrentDirectory(),
+            'doc_root':self.getCurrentDirectory()+'/'+self.getDocumentRoot().replace('./',''),
+            'database':{
+                'dir':database_dir,
+                'type':self.getType(),
+                'name':self.getDatabaseName(),
+                'user':None,
+                'host':None,
+                'port':None,
+            },
+            'flask':{
+                'title':self.getTitle(),
+                'tmpl':{
+                    'file':templates+'/'+self.getTmplFile(),
+                    'html':templates,
+                    'static':{
+                        'static':static,
+                        'javascript':javascript,
+                        'css':css,
+                        'img':img,
+                    }
+                }
+            },
+            'gunicorn':{
+                'file':self.getGunicornFile(),
+                'host':self.getGunicorn()[0],
+                'port':self.getGunicorn()[1],
+                'worker':self.getGunicorn()[2],
+                'program':self.getGunicorn()[3],
+                'access_log':self.getGunicornLog()[0],
+                'error_log':self.getGunicornLog()[1],
+            }
+        }
+
+        return self.__config
+
+    def setCodeJson(self):
+        self.setJsonFile('config.json')
+        return self.appConfig()
     
     def setCodeYAML(self):
         filename='config.yaml'
@@ -537,15 +579,27 @@ conn.close()'''
         return text
 
     def getImportModule(self):
-        return self.importModule
+        return self.import_module
 
     # setImportModule('os','sys','datetime')
     def setImportModule(self,module=['os','sys','datetime']):
-        self.importModule=module
+        self.import_module=module
+    
+    def debug_code(self):
+        sharp='#'*32
+        massage=f"""{sharp}
+        + 
+        + 
+        + 
+        + 
+{sharp}
+"""
+        print(massage)
 
     def setCodeGunicorn(self):
-        self.setGunicornFile('gunicorn_start')
-        source='''# Input Your Setting:
+        (host,port,worker,program,run_gunicorn)=self.getGunicorn()
+        (access_log,error_log)=self.getGunicornLog()
+        source=f'''# Input Your Setting({run_gunicorn}):
 # Read the gunicorn Documents
 # - (https://gunicorn.org/#quickstart)
 #
@@ -558,14 +612,20 @@ conn.close()'''
 #		>> PROGRAM="main"
 #               or
 #       >> PROGRAM="main:application"
+#
 
-PROGRAM="main"
+PROGRAM="{program}"
+
+# ACCESSLOG
+ACCESSLOG="{access_log}"
+# ERRORLOG
+ERRORLOG="{error_log}"
 
 # Input Your Host & Port Number:
-ADDRESS="127.0.0.1:8080"
+ADDRESS="{host}:{port}"
 
 # WORKER
-WORKER=2
+WORKER={worker}
 
 cd `dirname $0`
 
@@ -586,7 +646,7 @@ if [ -z "$ADDRESS" ] ;then
 	ADDRESS='127.0.0.1:8080'
 fi
 
-gunicorn -w "$WORKER" -b "$ADDRESS" "$PROGRAM"
+gunicorn -w "$WORKER" -b "$ADDRESS" --access-logfile "$ACCESSLOG" --error-logfile "$ERRORLOG" "$PROGRAM"
 
         '''
         return source
@@ -669,6 +729,7 @@ if __name__=="__main__":
     def setCodeHtml(self):
         text='''<!DOCTYPE html>
 <html lang='ja'>
+    <!-- https://flask.palletsprojects.com/en/2.0.x/ -->
     <head>
         <meta charset='utf-8'>
         <title>{{page_title}}</title>
@@ -683,7 +744,8 @@ if __name__=="__main__":
         </a>
         </nav>
         <div class='container'>
-            
+            <h1>Work It!</h1>
+            <buttton id='editable'>編集可能・不可能切替</button>
         </div>
         <!-- 
             JQuery(https://api.jquery.com/) 
@@ -701,8 +763,7 @@ if __name__=="__main__":
         return text
 
     def setCodeShell(self):
-        text=f'''python {self.getPyFile()}
-'''
+        text=f'''python {self.getPyFile()}'''
         return text
 
     def preview(self):
@@ -724,8 +785,9 @@ if __name__=="__main__":
     def install(self):
 
         dir=self.getInstallDir()
+        doc_root=self.getDocumentRoot()
+        app_path=self.getCurrentDirectory()
 
-        
         log_text='*********************************************************************\n'
         log_text+=f'Install to "{self.getInstallDir()}" Directory\n'
         log_text+='*********************************************************************\n'
@@ -752,11 +814,21 @@ if __name__=="__main__":
         # manage directory
         manage=dir+'/manage'
         self.makeDir(manage)
+        # log directory
+        logs=manage+'/logs'
+        self.makeDir(logs)
 
         # install log 
         log_file=manage+'/install.log'
 
-        # gunicorn file
+        # gunicorn files
+        self.setGunicornFile('gunicorn_start')
+        access_log=f'{app_path}{logs.replace("./","/")}/gunicorn_access_log'
+        error_log=f'{app_path}{logs.replace("./","/")}/gunicorn_error_log'
+        
+        self.setGunicornLog(access_log,error_log)
+        self.setGunicorn(host='127.0.0.1',port=5001,worker=2,program='main')
+
         text=self.setCodeGunicorn()
         file=dir+'/'+self.getGunicornFile()
         self.setGunicornFile(file)
@@ -766,11 +838,21 @@ if __name__=="__main__":
         print(log_text,end='')
         log_file_text+=log_text
 
+        # gunicorn log        
+        log_text='\n+ access_log(gunicorn) > '+access_log
+        print(log_text,end='')
+        log_text='\n+ error_log(gunicorn) > '+error_log
+        print(log_text,end='')
+        log_file_text+=log_text
+
         # config json
         text=self.setCodeJson()
         file=manage+'/'+self.getJsonFile()
         self.setJsonFile(file)
-        self.write(self.getJsonFile(),text)
+        # self.write(self.getJsonFile(),text)
+        with open(self.getJsonFile(),'wt') as fp:
+            json.dump(text,fp,indent=4,ensure_ascii=False)
+
         log_text='\n+ create config > '+self.getJsonFile()
         print(log_text)
         log_file_text+=log_text
@@ -846,5 +928,5 @@ class ShoppingCart(WebAppInFlask):
     def __init__(self):
         super.__init__()
     
-    def setCodePy(self):
+    def get(self):
         pass

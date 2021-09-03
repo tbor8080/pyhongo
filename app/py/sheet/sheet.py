@@ -1,9 +1,11 @@
-import json,pprint
+import json,pprint,datetime
 
 try:
     from multipledispatch import dispatch
 except ModuleNotFound:
     ModuleNotFounds('multipledispatch')
+
+__debug_mode=False
 
 class Matrix:
 
@@ -39,7 +41,7 @@ class Matrix:
             or
         + column_property(index=0,column='B',**option={key='value', date='2021-08-26',...})
 
-        + save()
+        + save:
         + save_as_json()
         + as_json()
 
@@ -74,7 +76,8 @@ class Matrix:
     """
     __sheet__={
         'header':[],
-        'list':[]
+        'list':[],
+        'property':{},
     }
 
     __package__='__matrix__'
@@ -95,8 +98,32 @@ class Matrix:
             self.__sheet__['header'][num]=lists[num]
     
     def property(self, **kwargs):
-        self.__sheet__['property']=kwargs
+        """
+        + self.property(title='test')
+            - title
+            - description
+            - registdate
+            - update
+            - filetype
+            - filesize
+        """
+        try:
+            self.__sheet__['property']['title']=kwargs['title']
+        except KeyError:
+            self.__sheet__['property']['title']=None
 
+        try:
+            self.__sheet__['property']['description']=kwargs['description']
+        except KeyError:
+            self.__sheet__['property']['description']=None
+
+        try:
+            self.__sheet__['property']['filetype']=kwargs['filetype']
+        except KeyError:
+            self.__sheet__['property']['filetype']=None
+
+        self.__sheet__['property']['update']=datetime.datetime.now()
+        
     def add(self,*lists):
         dic={}
         if len(self.__sheet__["header"])<len(lists):
@@ -171,7 +198,15 @@ class Matrix:
             return self.__sheet__['list'][:num]
         return self.__sheet__['list']
     
-    def get_property(self,num=None):
+    def get_property(self,property=None):
+        if property is None:
+            exit()
+        try :
+            return self.__sheet__['property'][property]
+        except KeyError:
+            print(f'{property} is Not Found.')
+            print('property is title or description or filename or filepath or filetype or update or registdate')
+            exit()
         return self.__sheet__['property']
     
     def length(self,name='list'):
@@ -198,10 +233,26 @@ class Matrix:
             data=self.dump('list')
         return json.dumps(data)
 
+# Daicho
 class Ledge(Matrix):
     def __init__(self):
         super().__init__()
         self.init(256)
+
+# Data Stored text data.
+# No Database Application
+class StoredText(Matrix):
+    def __init__(self):
+        super().__init__()
+        self.init(256)
+    
+    def sample(self):
+        self.property(title='Sample Stored Text Data',filetype='text/plane')
+        self.column('index','column01','column02')
+        self.add(1,'testdata','testdata')
+        print('save method is as_save_json()')
+        print(self.__doc__)
+        return self.get()
 
 def Debug():
     st=Matrix()
@@ -219,5 +270,5 @@ def Debug():
     print(st.get(7))
     #st.clear()
     st.dump()
-
-Debug()
+if __debug_mode:
+    Debug()
