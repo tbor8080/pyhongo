@@ -6,41 +6,21 @@ from sqlite import *
 from threading import Thread
 import json
 
+from time import sleep
+from cui import *
+
+print('wait',end='')
+sleep(1)
+
+try:
+    from app import *
+except:
+    print('Module File NotFound')
+    print('% python -m installer')
+    exit()
+
 ####################################################################################################
-# change at variable:doc_root etc...
 ####################################################################################################
-# + Web Application: DOCUMENT_ROOT
-doc_root='./first_flask_app'
-
-# + WebApplication Title:
-web_title='Automatic Create WebApp'
-
-# + Python&Template File Name
-# For Python
-PyFile='main.py'
-
-# For HTML Template (by Bootstrap)
-TmplFile='main.html'
-
-# + for database: type is sqlite or postgres sql(pgsql | psql)
-#   - User Account: password is None OK.(but database security is no good, a lot of risk.)
-#   - DatabaseUser=('<username>','<password>') or DatabaseUser=('<username>',None) or DatabaseUser=('<username>','')
-#   - <password> is more than 8 charactors.
-DatabaseUser=('ryohei',None)
-# Database Type is sqlite or pgsql or psql.
-# DatabaseType='sqlite' or DatabaseType='psql' or DatabaseType='pgsql'
-# mysql is not type.
-DatabaseType='pgsql'
-# Database Name is Your database
-DatabaseName='test'
-
-# + Flask : Routing List Example.(Tuple List)
-FlaskRouting=(
-    {'path':'/', 'function':'index', 'code':'hello="Hello."'},
-    {'path':'/main', 'function':'main'},
-    {'path':'/test', 'function':'test'},
-)
-
 # + Swtich To Installer.py: 
 __switch__={
     "install":True,
@@ -52,7 +32,7 @@ __switch__={
 
 # + save as installer.py, run the python script.(terminal,bash|zsh)
 #   - install directory chmod 755 <directory> 
-#   - $ python installer.py [press enter key]
+#   - $ python -m installer [press enter key]
 #   - start install ... please wait ... for a littie bit. 
 
 ####################################################################################################
@@ -74,13 +54,21 @@ def createTable(db):
 def main():
     # Framework: Create WebApp:
     Instanse=WebAppConfig()
+    # config json
+    Instanse.set_config(f'{doc_root}/manage/config.json')
     # For SQLite Example
-    # Instanse.config(database=DatabaseType,dbname=DatabaseName,document_root=doc_root)
+    if DatabaseType=='sqlite':
+        Instanse.config(database=DatabaseType,dbname=DatabaseName,document_root=doc_root)
     # For PostgreSQL
-    Instanse.config(database=DatabaseType,dbname=DatabaseName,user=DatabaseUser,document_root=doc_root)
+    if DatabaseType=='pgsql' or DatabaseType=='psql':
+        print(DatabaseType,DatabaseName,DatabaseUser,doc_root)
+        # Instanse.config(database=DatabaseType,dbname=DatabaseName,user=DatabaseUser,document_root=doc_root)
+    # For PostgreSQL (Custom Host & Port)
+        Instanse.config(database=DatabaseType,dbname=DatabaseName,user=DatabaseUser,document_root=doc_root,host=DatabaseHost,port=DatabasePort,)
+    if DatabaseType is None:
     # Non Database Config Example
-    # Instanse.config(document_root=doc_root)
-    
+        Instanse.config(document_root=doc_root)
+
     (db,app)=Instanse.db(),Instanse.app()
     
     app.setPyFile(PyFile)
@@ -95,8 +83,8 @@ def main():
     # Web Application Title
     app.setTitle(web_title)
     
-    # Install to <document_root> in Files
-    if os.path.exists(app.getPyFile()) is not True and app.switch_to('install',__switch__['install']):
+    # Install to <document_root> in Files(main.py)
+    if isMainFile(app.getPyFile(),app) is False and app.switch_to('install',__switch__['install']):
         app.install()
     else:
         error_message=f"""
@@ -107,22 +95,17 @@ def main():
 + Would like to delete the directory?
 + Directory delete, warning.
 + $ rm -rf {app.getInstallDir()}
-+
++ 
 ++++++++++++++++++++++++++++++++++++++++++++++++++++"""
 
         print(error_message)
+        
         # debug code:
-
-        json_file=app.getInstallDir()+'/manage/config.json'
-        app.setJsonFile(json_file)
 
         app.setGunicornFile('gunicorn_start')
         app.setGunicorn()
         # print(db.getType())
         # app.appConfig()
-        
-        # print(app.getJsonFile())
-        # print(app.loadJson(app.getJsonFile()))
 
     # Automation WSGI Run Script
     # Look at Your Set Host & Port Number!!
@@ -147,8 +130,11 @@ def main():
     # return for the GUI Application
     return app,db
 
-# debug script
+def isMainFile(file=None,app=None):
+    if file is not None and app is not None:
+        return os.path.exists(app.getPyFile())
 
+# debug script
 def forDebug():
     Instanse=WebAppConfig()
     print(Instanse.getMethod(SelectSQLite3))

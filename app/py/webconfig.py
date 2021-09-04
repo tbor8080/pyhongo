@@ -1,6 +1,7 @@
 # /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os,sys,json
 from py.webapp import *
 
 class WebAppConfig(Database,WebAppInFlask):
@@ -51,12 +52,12 @@ class WebAppConfig(Database,WebAppInFlask):
         'django':False,
         'cart':False
     }
-    
+    __config__={}
     def __init__(self):
         self.setType(None)
         self.setDatabaseName(None)
         super().__init__(self.dbtype,self.dbname)
-        self.setDatabase(None)
+        self.setDatabaseType(None)
     
     def __doc(self):
         """
@@ -96,46 +97,49 @@ class WebAppConfig(Database,WebAppInFlask):
 
     def config(self,database=None,framework=None,dbname=None,document_root=None,**kwargs):
 
+        # if self.is_config() is False:
         if database is not None:
-            self.setDatabase(database)
-        if framework is not None:
-            self.setFramework(framework)
+            self.setDatabaseType(database)
         if dbname is not None:
             self.setDatabaseName(dbname)
         if document_root is not None:
             self.setDocumentRoot(document_root)
             self.makeDir(document_root)
+        
+        self.setFramework(framework)       
 
         for kw in kwargs:
             if kw == 'user':
                 self.setUser(kwargs[kw])
+        #else:
+            # config=self.get_config()
+            #print(config)
+            # self.setDatabase(config['database']['type'])
+            # self.setDocumentRoot(config['doc_root'])
+            # self.setUser()
 
     def Database(self):
-        database_application=self.getDatabase()
+        database_application=self.getDatabaseType()
+
         if self.__database__['sqlite']:
-            database_dir=document_root+self.__install__['directory'][0]
+            database_dir=self.getDocumentRoot()+'/'+self.__install__['directory'][0]
             self.makeDir(database_dir)
             return SelectSQLite3(database_application,dbname=database_dir+self.getDatabaseName())
-
         elif self.__database__['pgsql'] or self.__database__['psql']:
             try:
                 user=self.getUser()
             except AttributeError:
                 self.setUser((None,None))
-
             return SelectPgSQL(database_application,dbname=self.getDatabaseName(),user=user)
-
         # No Database Application
         return FileinFlask(database_application)
     
     def Application(self):
-
         framework=WebAppInFlask()
-        document_root=self.getInstallDir()
+        document_root=self.getDocumentRoot()
         if document_root=='':
             print('+ document_root is not found.')
-            print('     - look at method config(document_root="xxx")',self.__doc())
-            
+            print('     - look at method config(document_root="xxx")')
             exit()
         
         if self.__framework__['django']:
@@ -143,23 +147,33 @@ class WebAppConfig(Database,WebAppInFlask):
         elif self.__framework__['cart']:
             framework=ShoppingCart()
 
+        framework.setDatabase(self.db())
         framework.setInstallDir(document_root)
+        framework.setType(self.getDatabaseType())
         framework.setDatabaseName(self.getDatabaseName())
+        framework.setFramework(self.getFramework())
+        # exit()
         return framework
 
     def getGlobalVar(self):
         return self.__install__
 
-    def getDatabase(self):
+    def getDatabaseType(self):
         return self.__database_application
 
-    def setDatabase(self,database=None):
+    def setDatabaseType(self,database=None):
         if database is not None:
            self.__database__[database]=True
         self.__database_application=database
     
+    def getFramework(self):
+        return self.__framework
+
     def setFramework(self,framework=None):
-        if framework is not None:
+        if framework is None:
+            framework='flask'
+        self.__framework=framework
+        if framework is not None:            
             self.__framework__[framework]=True
 
     def app(self):
@@ -167,3 +181,29 @@ class WebAppConfig(Database,WebAppInFlask):
 
     def db(self):
         return self.Database()
+    
+    def set_config_json(self,file):
+        self.__json_file=file
+    
+    def get_config_json(self):
+        return self.__json_file
+
+    def is_config(self):
+        if os.path.exists(self.get_config_json()):
+            return True
+        return False
+    
+    def get_config(self):
+        return self.__config__
+
+    def set_config(self,file=None):
+        self.set_config_json(file)
+        if self.is_config():
+            self.__config__=self.read_json()
+        else:
+            return self.is_config()
+
+    def read_json(self):
+        with open(self.get_config_json(),'rt') as fp:
+            data=fp.read()
+        return json.loads(data)

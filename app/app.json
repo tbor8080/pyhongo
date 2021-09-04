@@ -1,0 +1,17 @@
+{
+    "doc_root": "./first_flask_app",
+    "config": "./first_flask_app/manage/config.json",
+    "web_title": "Automatic Create WebApp",
+    "PyFile": "main.py",
+    "TmplFile": "main.html",
+    "database": {
+        "type": "pgsql",
+        "user": [
+            "test",
+            "97-115-97-115-97-115-113-119-49-50-51-52"
+        ],
+        "host": "localhost",
+        "name": "sample",
+        "port": 5432
+    }
+}

@@ -5,8 +5,15 @@
 
 #### [ Update ]:
 
-    Update: 2021.08.23
-    < Next Update to 2021.08.28 >
+    Update: 2021.09.04
+    - base class update.
+    - cli installer custom update.
+    - flask & gunicorn setup.
+    
+    < Next Update to 2021.09.12 >
+    I would lile to ...
+    - postgre sql gui window
+    - nginx & python fast cgi update.
 
 ## Quick Start Application
 
@@ -24,7 +31,7 @@
 
     > python -m venv <VENV Directory Name>
     > pip -r requirements.txt
-    > python ./installer.py
+    > python -m installer
 
 ### [ Change Document Root ( doc_root ) ]:
 
@@ -34,7 +41,7 @@
 
     command to.
 
-    > python ./installer.py
+    > python -m installer
 
     wait a little bit, ... install ....
     Success the Project File in installer.sh [directory]
@@ -42,20 +49,23 @@
             - install directory
 
     Coding Python File
+
         - install directory(document_root)
 
     run the [ Flask Application(WSGI)]
+
         + default:
             $ python [./first_flask_app]/main.py
         + go to browser:
             default: http://127.0.0.1:5000/
 
     run the [ Gunicorn ]
+    
         + default:
             $ cd [./first_flask_app/]
             $ ./gunicorn_start
         + go to browser:
-            default: http://127.0.0.1:8080/
+            default: http://127.0.0.1:5001/
 
     Go to access, Web browser!!
 

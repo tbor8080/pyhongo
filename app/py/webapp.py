@@ -380,13 +380,10 @@ class WebAppInFlask(WebApp):
 
     def __init__(self, db=False):
         super().__init__()
-        # print(db.getType())
-        self.db=db
-        self.appType(self.db)
 
         # {'path':'/','function':function}
         self.route=[]
-        
+        self.tbl=[]
         self.setTitle('SampleWebApp')
         self.setTmplFile('main.html')
         self.setPort(8080)
@@ -404,26 +401,20 @@ class WebAppInFlask(WebApp):
     def selectDataBase(self):
         pass
 
-    def appType(self,db=False):
-        self.appType=False
-        if self.db:
-            self.appType=True
-            self.dbtype=db.getType()
-            self.dbname=db.getDatabaseName()
-            self.tbl=db.getTable()
-        else:
-            self.dbtype=False
-            self.dbname=None
-            self.tbl=[]
-
     def getClassName(self):
         return self.__class__.__name__
+
+    def getDatabase(self):
+        return self.db
+
+    def setDatabase(self,database=None):
+        self.db=database
 
     def getType(self):
         return self.dbtype
 
-    def setType(self,type):
-        self.dbtype=dbtype
+    def setType(self,types):
+        self.dbtype=types
 
     def getDatabaseName(self):
         return self.dbname
@@ -480,7 +471,18 @@ class WebAppInFlask(WebApp):
     def setComment(self,text):
         self.comment=text
     
+    def getFramework(self,framework=None):
+        return self.__framework
+
+    def setFramework(self,framework=None):
+        self.__framework=framework
+
     def loadConfig(self,filename=None):
+        try:
+            self.getJsonFile()
+        except:
+            self.setJsonFile(f'{self.getInstallDir()}/manage/config.json')
+
         if os.path.exists(self.getJsonFile()):
             # print(self.getJsonFile())
             with open(self.getJsonFile(),'rt') as fp:
@@ -491,25 +493,46 @@ class WebAppInFlask(WebApp):
     def appConfig(self):
 
         doc_root=self.getDocumentRoot()
+        database=self.getDatabase()
         database_dir=doc_root+self.__install__['directory'][0]
         templates=doc_root+self.__install__['directory'][1]
         static=doc_root+self.__install__['directory'][2]
         javascript=static+self.__install__['directory'][3]
         css=static+self.__install__['directory'][4]
         img=static+self.__install__['directory'][5]
+        (dbuser,dbhost,dbport)=(None,None,None)
+        try:
+            dbuser=database.getUser()
+        except AttributeError:
+            database.setUser((None,None))
+            dbuser=database.getUser()
+        try:
+            dbhost=database.getHost()
+        except AttributeError:
+            database.setHost(None)
+            dbhost=database.getHost()
+        try:
+            dbport=database.getPort()
+        except AttributeError:
+            database.setPort(1234)
+            dbport=database.getPort()
+        dbuser=list(dbuser)
+        dbuser[1]='*'*len(str(dbuser[1]))
 
         self.__config={
             'host':self.getHost(),
             'port':self.getPort(),
             'install_path':self.getCurrentDirectory(),
             'doc_root':self.getCurrentDirectory()+'/'+self.getDocumentRoot().replace('./',''),
+            'main':self.getPyFile(),
+            'framework':self.getFramework(),
             'database':{
                 'dir':database_dir,
                 'type':self.getType(),
                 'name':self.getDatabaseName(),
-                'user':None,
-                'host':None,
-                'port':None,
+                'user':dbuser,
+                'host':dbhost,
+                'port':dbport,
             },
             'flask':{
                 'title':self.getTitle(),
@@ -559,22 +582,22 @@ class WebAppInFlask(WebApp):
     def setCodeSqlite(self):
         # sqlite3 :code
         text='''
-# Example: DataBase >> Sqlite3
-# Sqlite3 Test Connection
-conn=sqlite3.connect(dbname)
-cursor=conn.cursor()
+    # Example: DataBase >> Sqlite3
+    # Sqlite3 Test Connection
+    conn=sqlite3.connect(dbname)
+    cursor=conn.cursor()
 
-# SQL Code Start
+    # SQL Code Start
 
-# SQL Code End
-
-# Database Close
-conn.close()'''
+    # SQL Code End
+    # Database Close
+    conn.close()'''
         # sqlite3 :code
         return text
 
     def setCodeNotSQL(self):
         text=f'''
+    # code
         '''
         return text
 
@@ -654,6 +677,17 @@ gunicorn -w "$WORKER" -b "$ADDRESS" --access-logfile "$ACCESSLOG" --error-logfil
     def setCodePy(self):
         filename='main.py'
         self.setComment('This code was created by Automation tools')
+        try:
+            self.getTable()
+        except AttributeError:
+            self.setTable([])
+
+        code=''
+        if self.getType()=='sqlite':
+            code=self.setCodeSqlite()
+        elif self.getType()==False:
+            code=self.setCodeNotSQL()
+
         text=f'''# /usr/bin/env python
 # -*- coding: utf-8 -*-
 # Filename: {self.getInstallDir()}/main.py
@@ -701,12 +735,8 @@ application=Flask(__name__)
 # ======================================== routing start
 
 @application.route('{rt['path']}'{method})
-def {rt['function']}():'''
-            if self.getType()=='sqlite':
-                text+=self.setCodeSqlite()
-            if self.getType()==False:
-                text+=self.setCodeNotSQL()
-            text+='''
+def {rt['function']}():
+    {code}
     return render_template(
         tmpl_file, 
         title=page_title
@@ -781,6 +811,18 @@ if __name__=="__main__":
         text+='\n-------------------------------------------------------------------------------------------\n'
         text+=self.setCodeShell()
         print(text)
+
+    def remove_docroot_code(self):
+        file=self.getJsonFile()
+        config=self.loadJson(file)
+        doc_root=config["doc_root"]
+        install_dir=config["install_path"]
+        return f'rm -rf {doc_root.replace(install_dir,".")}'
+    
+    def auto_run_code(self):
+        file=self.getJsonFile()
+        config=self.loadJson(file)
+        return f'python {config["install_path"]}'
 
     def install(self):
 

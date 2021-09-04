@@ -50,6 +50,9 @@ class Database(ForSQL):
     
     def __config(self):
         pass
+    
+    def get(self):
+        return self.__config__
 
     def getType(self):
         return self.dbtype
@@ -131,6 +134,17 @@ class FileinFlask(Database):
         super().__init__(dbtype,dbname)
         self.setFile(dbname)
     
+    def __config(self):
+        self.__config__['notdb']=self.isNonDB()
+        self.__config__['sqlite']=False
+        self.__config__['pgsql']=False
+        self.__config__['psql']=False
+        self.__config__['dbname']=None
+        self.__config__['dbtype']='text'
+    
+    def isNonDB(self):
+        return True
+
     def asStoredText(self):
         return True
     
@@ -149,8 +163,10 @@ class FileinFlask(Database):
         self.save(text)
 
     def save(self,text=''):
-        with open(self.filename,'wt') as fp:
+        with open(self.getFile(),'wt') as fp:
             fwrite(text)
+    def asExcel(self):
+        file=self.getFile()
     
 class SelectSQLite3(Database):
 
@@ -165,13 +181,14 @@ class SelectSQLite3(Database):
         super().__init__(dbtype,dbname)
         
         if dbname is None:
+            print('database name is not found.')
             exit()
 
         self.setType(dbtype)
         self.setDatabaseName(dbname)
 
         if self.test() is False:
-            print('+ Database Test Is Failed.')
+            print('+ Database Test is Failed.')
             exit()
 
     def isSQLite(self):
@@ -181,20 +198,20 @@ class SelectSQLite3(Database):
         return self.__config__
 
     def __config(self):
-        self.__config['sqlite']=self.isSQLite()
-        self.__config['dbname']=self.getDatabaseName()
-        self.__config['dbtype']=self.getType()
+        self.__config__['sqlite']=self.isSQLite()
+        self.__config__['dbname']=self.getDatabaseName()
+        self.__config__['dbtype']=self.getType()
 
     def createDatabase(self):
         pass
 
     def test(self):
         self.__connect()
-        cur=self.cursor().execute('select sqlite_version();')
+        cur=self.__cursor().execute('select sqlite_version();')
         response=cur.fetchall()
         self.__close()
         if len(response) > 0:
-            return True
+            return response
         return False
 
     def __connect(self):
@@ -224,7 +241,7 @@ class SelectPgSQL(Database):
         > ¥dt
             - table info
         > select verison();
-            - postgres install version
+            - postgres version(install)
         > ¥q
             - quit
 

@@ -452,7 +452,13 @@ class Loading:
         window.open()
         
     def onclick_flask_run(self,e):
-        app=self.getApp()
+        config=self.getApp().loadConfig()
+        url=f'http://{config["host"]}:{config["port"]}'
+        # print(url)
+        if self.driver is not None:
+            self.driver.quit()
+        self.driver=Chrome()
+        self.driver.get(url)
     
     def onclick_gunicorn_run(self,e):
         config=self.getApp().loadConfig()['gunicorn']
@@ -505,13 +511,8 @@ class Loading:
         
     def run(self,app=None,db=None):
 
-        #th_sqlite=Thread(target=self.sqlite_onclick).start()
-        #th_flask=Thread(target=self.onclick_flask_run).start()
-
         window=tk.Tk()
         window.title('webapp explorer hub')
-
-        config=self.getApp().loadConfig()['gunicorn']
 
         sqlite_button=tk.Button(window,text='SQLite explorer')
         sqlite_button.bind('<1>',self.sqlite_onclick)
@@ -519,31 +520,38 @@ class Loading:
         pgsql_button=tk.Button(window,text='Postgre SQL explorer')
         pgsql_button.bind('<1>',self.pgsql_onclick)
 
-        flask_button=tk.Button(window,text='run the flask')
+        config=self.getApp().loadConfig()
+        flask_button=tk.Button(window,text=f'flask({config["host"]}:{config["port"]})')
         flask_button.bind('<1>',self.onclick_flask_run)
 
-        gunicorn_button=tk.Button(window,text=f'Gunicorn( port number:{config["host"]} )')
+        config=self.getApp().loadConfig()['gunicorn']
+        gunicorn_button=tk.Button(window,text=f'Gunicorn({config["host"]}:{config["port"]})')
         gunicorn_button.bind('<1>',self.onclick_gunicorn_run)
 
         self.driver=None
         doc_button=tk.Button(window,text='Getting Start(Doc)')
         doc_button.bind('<1>',self.onclick_doc_run)
-        
-
+    
         # Layout
         sqlite_button.pack()
         pgsql_button.pack()
-        # flask_button.pack()
+        flask_button.pack()
         gunicorn_button.pack()
         doc_button.pack()
         
         window.mainloop()
 
     def onclick_doc_run(self,e):
-        self.getting_start()
+        sub_root=tk.Tk()
+        sub_root.geometry('600x600')
+        getting_start=self.getting_start()
+        text=tk.Text(sub_root)
+        text.insert('1.0',getting_start)
+        text.pack()
+        sub_root.mainloop()
 
     def getting_start(self):
-        sharp='#'*128
+        sharp='#'*64
         getting_start=f'''{sharp}
         [Homebrew]
             + Document
@@ -572,7 +580,7 @@ class Loading:
             + List the module(pip)
                 $ pip list
     {sharp}
-        [PostgreSQL]
+        [PostgreSQL]:
     {sharp}
         + install postgres : version management system apt-get etc...
         + (Search)
@@ -582,7 +590,7 @@ class Loading:
             $ psql --help
         
         + (Start Service)
-            + Linux        
+            + Linux/OSX
             $ service (start|restart|stop) postgres
             + OSX/Linux
             $ brew services (start|restart|stop) postgres
@@ -641,4 +649,4 @@ class Loading:
                 - ./first_web_app/templates (default)
                     - main.html (based by Bootstrap)
         '''
-        print(getting_start)
+        return getting_start
