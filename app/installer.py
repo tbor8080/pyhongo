@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from py.webconfig import *
-from sqlite import *
+from gui import *
+from cui import *
+
 from threading import Thread
 import json
-
 from time import sleep
-from cui import *
+
 
 print('wait',end='')
 sleep(1)
@@ -61,9 +62,9 @@ def main():
         Instanse.config(database=DatabaseType,dbname=DatabaseName,document_root=doc_root)
     # For PostgreSQL
     if DatabaseType=='pgsql' or DatabaseType=='psql':
-        print(DatabaseType,DatabaseName,DatabaseUser,doc_root)
+        # print(DatabaseType,DatabaseName,DatabaseUser,doc_root)
         # Instanse.config(database=DatabaseType,dbname=DatabaseName,user=DatabaseUser,document_root=doc_root)
-    # For PostgreSQL (Custom Host & Port)
+        # For PostgreSQL (Custom Host & Port)
         Instanse.config(database=DatabaseType,dbname=DatabaseName,user=DatabaseUser,document_root=doc_root,host=DatabaseHost,port=DatabasePort,)
     if DatabaseType is None:
     # Non Database Config Example

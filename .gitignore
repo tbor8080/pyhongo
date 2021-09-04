@@ -1,17 +1,17 @@
 # Automatic Web App
-__pycache__/
-first_flask_app/
-game/
-nginx/
-sample/
-test/
-README_ja.md
-nginx.txt
-venv.*
-sample.py
-psql_*
-optional.sh
-class_test.py
+app/__pycache__/
+app/first_flask_app/
+app/game/
+app/nginx/
+app/sample/
+app/test/
+app/README_ja.md
+app/nginx.txt
+app/venv.*
+app/sample.py
+app/psql_*
+app/optional.sh
+app/class_test.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

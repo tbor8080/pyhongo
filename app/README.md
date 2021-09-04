@@ -7,13 +7,18 @@
 
     Update: 2021.09.04
     - base class update.
-    - cli installer custom update.
+    - cli installer custom.
     - flask & gunicorn setup.
     
     < Next Update to 2021.09.12 >
-    I would lile to ...
-    - postgre sql gui window
-    - nginx & python fast cgi update.
+    Would like to ...
+    + sqlite gui window
+    + postgre sql gui window.
+    + nginx & python fast cgi update.
+    + deploy service.
+    + web service automation
+        - shopping cart
+        - ledge management
 
 ## Quick Start Application
 
@@ -35,37 +40,56 @@
 
 ### [ Change Document Root ( doc_root ) ]:
 
-    Open Editor(VsCode etc...) > installer.py
-    Edit to variable < doc_root > is Your Enviroment.
-    Save and File Close installer.py.
-
-    command to.
+    change env no open file.  
+    to command line.
 
     > python -m installer
 
-    wait a little bit, ... install ....
+    - install success,
+    - browser open(auto),
+    - serve flask application
+    - stop(abort) applicatoion > ctrl+c
+
     Success the Project File in installer.sh [directory]
         > [first_flask_app] 
             - install directory
 
-    Coding Python File
+    Coding Python & Template File
 
-        - install directory(document_root)
+        - install directory = document_root
+            
+            - main.py
+            - templates/main.html
+            - static/css
+            - static/img
+            - static/javascript
 
     run the [ Flask Application(WSGI)]
 
         + default:
+
             $ python [./first_flask_app]/main.py
+
         + go to browser:
+        
             default: http://127.0.0.1:5000/
 
     run the [ Gunicorn ]
-    
+
         + default:
+
             $ cd [./first_flask_app/]
             $ ./gunicorn_start
+
         + go to browser:
+
             default: http://127.0.0.1:5001/
+        
+        + log:
+            [./first_flask_app/]
+                - manage/logs/
+                    - gunicorn_access_log
+                    - gunicorn_error_log
 
     Go to access, Web browser!!
 
