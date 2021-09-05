@@ -285,6 +285,7 @@ class SelectPgSQL(Database):
         self.__config__['port']=self.getPort()
         self.__config__['dbname']=self.getDatabaseName()
         self.__config__['dbtype']=self.getType()
+        return self.__config__
 
     def __test(self):
         try:

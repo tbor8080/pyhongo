@@ -453,18 +453,16 @@ class Loading:
         
     def onclick_flask_run(self,e):
         config=self.getApp().loadConfig()
-        url=f'http://{config["host"]}:{config["port"]}'
+        self.uri=f'http://{config["host"]}:{config["port"]}'
         # print(url)
         if self.driver is not None:
             self.driver.quit()
-        self.driver=Chrome()
-        self.driver.get(url)
+        Thread(target=self.chrome_thread).start()
     
     def onclick_gunicorn_run(self,e):
-        config=self.getApp().loadConfig()['gunicorn']
-        self.gunicorn_uri=f'http://{config["host"]}:{config["port"]}'
-        self.guincorn_file=self.getApp().getGunicornFile()
-
+        config=self.getApp().loadConfig()
+        self.gunicorn_uri=f'http://{config["gunicorn"]["host"]}:{config["gunicorn"]["port"]}'
+        self.guincorn_file=config['gunicorn']['file']
         Thread(target=self.gunicorn_thread).start()
         if self.driver is None:
             print('Please wait. open Chrome.')
@@ -475,20 +473,24 @@ class Loading:
         driver=Chrome()
 
     def gunicorn_thread(self):
-        url=self.gunicorn_uri
-        doc_root=self.getApp().loadConfig()["doc_root"]
-        file=doc_root+'/'+self.guincorn_file
-        text=f'[gunicorn_get_start]:{url}\n'
+        self.uri=self.gunicorn_uri
+        install=self.getApp().loadConfig()["install_path"]
+        file=install+self.guincorn_file.replace('./','/')
+        text=f'[gunicorn_get_start]:{self.uri}\n'
+        print(text)
+        response=None
         try:
-            response=requests.get(url)
-            text+=f'[gunicorn_started::{response.status_code} OK]:{url}\n'
+            response=requests.get(self.uri)
+            text+=f'[gunicorn_started::{response.status_code} OK]:{self.uri}\n'
         except requests.exceptions.ConnectionError:
             subprocess.call(f'{file}', shell=True)
-            text+=f'[gunicorn_start::{response.status_code}] NG:{url} {file}\n'
-        self.app_logging(text)
+            text+=f'[gunicorn_start::{response.status_code}] NG:{self.uri} {file}\n'
+            sleep(1)
+        # self.app_logging(text)
+        print(text)
         
     def chrome_thread(self):
-        url=self.gunicorn_uri
+        url=self.uri
         try:
             response=requests.get(url)
             if response.status_code==200:
@@ -510,6 +512,8 @@ class Loading:
             fp.write(text)
         
     def run(self,app=None,db=None):
+        
+        config=self.getApp().loadConfig()
 
         window=tk.Tk()
         window.title('webapp explorer hub')
@@ -517,10 +521,12 @@ class Loading:
         sqlite_button=tk.Button(window,text='SQLite explorer')
         sqlite_button.bind('<1>',self.sqlite_onclick)
 
+        # print(config['database']['type'])
         pgsql_button=tk.Button(window,text='Postgre SQL explorer')
         pgsql_button.bind('<1>',self.pgsql_onclick)
-
-        config=self.getApp().loadConfig()
+        if config['database']['type']!='pgsql':
+            pgsql_button['state']=tk.DISABLED
+        
         flask_button=tk.Button(window,text=f'flask({config["host"]}:{config["port"]})')
         flask_button.bind('<1>',self.onclick_flask_run)
 

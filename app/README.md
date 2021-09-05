@@ -5,22 +5,26 @@
 
 #### [ Update ]:
 
-    Update: 2021.09.04
+    Update: 2021.09.05
     - base class update.
     - cli installer custom.
     - flask & gunicorn setup.
     
     < Next Update to 2021.09.12 >
-    Would like to ...
+
+    I would like to ...
+    
     + sqlite gui window
     + postgre sql gui window.
     + nginx & python fast cgi update.
-    + deploy service.
+    + deploy && service.
+        - docker
+        - github action
     + web service automation
         - shopping cart
         - ledge management
 
-## Quick Start Application
+## [ Quick Start ]
 
     - Access Github Repository:
         - https://github.com/tbor8080/
@@ -71,7 +75,7 @@
             $ python [./first_flask_app]/main.py
 
         + go to browser:
-        
+
             default: http://127.0.0.1:5000/
 
     run the [ Gunicorn ]

@@ -62,8 +62,6 @@ def main():
         Instanse.config(database=DatabaseType,dbname=DatabaseName,document_root=doc_root)
     # For PostgreSQL
     if DatabaseType=='pgsql' or DatabaseType=='psql':
-        # print(DatabaseType,DatabaseName,DatabaseUser,doc_root)
-        # Instanse.config(database=DatabaseType,dbname=DatabaseName,user=DatabaseUser,document_root=doc_root)
         # For PostgreSQL (Custom Host & Port)
         Instanse.config(database=DatabaseType,dbname=DatabaseName,user=DatabaseUser,document_root=doc_root,host=DatabaseHost,port=DatabasePort,)
     if DatabaseType is None:
@@ -89,26 +87,22 @@ def main():
         app.install()
     else:
         error_message=f"""
+####################################################
+* Finish This program.
 ++++++++++++++++++++++++++++++++++++++++++++++++++++
 + Install Directory: {app.getInstallDir()} is exists.
++ or __switch__['install'] is False.
 + Skip to app.install()
 ++++++++++++++++++++++++++++++++++++++++++++++++++++
 + Would like to delete the directory?
-+ Directory delete, warning.
-+ $ rm -rf {app.getInstallDir()}
-+ 
-++++++++++++++++++++++++++++++++++++++++++++++++++++"""
-
++ Directory delete.
++ % ./remove_sample
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+####################################################"""
         print(error_message)
-        
-        # debug code:
+        # exit()
 
-        app.setGunicornFile('gunicorn_start')
-        app.setGunicorn()
-        # print(db.getType())
-        # app.appConfig()
-
-    # Automation WSGI Run Script
+    # Automatic WSGI Start Run Script
     # Look at Your Set Host & Port Number!!
     # And stay a little time, webdriver(chrome) run! (auto browse host (& port))
     
@@ -140,9 +134,11 @@ def forDebug():
     Instanse=WebAppConfig()
     print(Instanse.getMethod(SelectSQLite3))
 
-    classname=['WebAppConfig','SelectSQLite3']
+    classname=['WebAppConfig','SelectSQLite3','SelectPgSQL']
     for clsname in classname:
         Instanse.getInherit(eval(clsname))
 
 if __name__=='__main__':
+    if __switch__['install'] is False:
+        exit()
     main()    

@@ -52,7 +52,9 @@ class WebAppConfig(Database,WebAppInFlask):
         'django':False,
         'cart':False
     }
+    
     __config__={}
+
     def __init__(self):
         self.setType(None)
         self.setDatabaseName(None)
@@ -108,12 +110,17 @@ class WebAppConfig(Database,WebAppInFlask):
         
         self.setFramework(framework)       
 
-        for kw in kwargs:
-            if kw == 'user':
-                self.setUser(kwargs[kw])
+        if self.getDatabaseType()=='pgsql':
+            for kw in kwargs:
+                if kw=='user':
+                    self.setUser(kwargs[kw])
+                elif kw=='host':
+                    self.setHost(kwargs[kw])
+                elif kw=='port':
+                    self.setPort(kwargs[kw])
         #else:
             # config=self.get_config()
-            #print(config)
+            # print(config)
             # self.setDatabase(config['database']['type'])
             # self.setDocumentRoot(config['doc_root'])
             # self.setUser()
