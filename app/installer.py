@@ -20,10 +20,11 @@ except:
     print('% python -m installer')
     exit()
 
-def getArgv(self):
+def getArgv():
+    _arg=[]
     for x in sys.argv:
-        self._arg.append(x)
-    return self._arg
+        _arg.append(x)
+    return _arg
 
 ####################################################################################################
 ####################################################################################################

@@ -2,11 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import os,sys,datetime,subprocess,json
+from re import I
 from time import sleep
 try:
     from flask import Flask, render_template, request, redirect
 except ModuleNotFoundError:
     print('Please "pip install Flask". ')
+    exit()
+
 import inspect
 from py.database import *
 
@@ -14,6 +17,7 @@ try:
     from selenium.webdriver import Chrome,ChromeOptions
 except ModuleNotFoundError:
     print('Please "pip install selenium."')
+    exit()
 
 class WebApp:
     """
@@ -220,6 +224,8 @@ class WebApp:
     def browse(self):
         (host,port)=self.getHost(),self.getPort()
         url=f'http://{host}:{port}/'
+        
+        exit()
         # selenium code:
         driver=Chrome()
         driver.get(url)
@@ -390,14 +396,6 @@ class WebAppInFlask(WebApp):
         self.setHost('127.0.0.1')
         self.debug=False
 
-    def __initialize_app(self):
-
-        self.setTitle('SampleWebApp')
-        self.setTmplFile('main.html')
-        self.setPort(8080)
-        self.setHost('127.0.0.1')
-        self.debug=False
-
     def selectDataBase(self):
         pass
 
@@ -460,6 +458,7 @@ class WebAppInFlask(WebApp):
         self.host=host
 
     def getDebug(self):
+        # True / False
         return self.debug
 
     def setDebug(self,debug):
@@ -673,7 +672,7 @@ gunicorn -w "$WORKER" -b "$ADDRESS" --access-logfile "$ACCESSLOG" --error-logfil
 
         '''
         return source
-
+    # Py code :main.py
     def setCodePy(self):
         filename='main.py'
         self.setComment('This code was created by Automation tools')
