@@ -8,8 +8,16 @@ import tkinter.filedialog as fd
 
 __config__={}
 
+def _Sh(cmd):
+    os.system(cmd)
+
+def clear():
+    _Sh("/usr/bin/env clear")
+
 def Dialog():
     __config__={}
+    # display clear
+    clear()
     skip_to_enter='Skip to Enter >>'
     print('#'*32)
     print('# Setup to Web Application(auto generator).')
@@ -61,7 +69,7 @@ def Dialog():
         print(f'\t- Set to [app.py] path > [ {__config__["app_py"]} ]')
 
         __config__['web_title']=input(f'+ Set Title:')
-        default='Automatic Create WebApp'
+        default='Py2WebApp Mini'
         if __config__['web_title']=='':
             __config__['web_title']=default
         print(f'\t- Set to web app title > [ {__config__["web_title"]} ]')

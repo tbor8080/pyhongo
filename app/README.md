@@ -38,16 +38,16 @@
 
 ### [ How to Install ]:
 
-    > python -m venv <VENV Directory Name>
-    > pip -r requirements.txt
-    > python -m installer
+    $ python -m venv <VENV Directory Name>
+    $ pip install -r requirements.txt
+    $ python -m installer
 
 ### [ Change Document Root ( doc_root ) ]:
 
     change env no open file.  
     to command line.
 
-    > python -m installer
+    $ python -m installer
 
     - install success,
     - browser open(auto),

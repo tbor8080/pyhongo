@@ -6,11 +6,11 @@ from gui import *
 from cui import *
 
 from threading import Thread
-import json
+import json,sys,os
 from time import sleep
 
 
-print('wait',end='')
+print('Please wait.....', end='')
 sleep(1)
 
 try:
@@ -19,6 +19,11 @@ except:
     print('Module File NotFound')
     print('% python -m installer')
     exit()
+
+def getArgv(self):
+    for x in sys.argv:
+        self._arg.append(x)
+    return self._arg
 
 ####################################################################################################
 ####################################################################################################
@@ -131,12 +136,12 @@ def isMainFile(file=None,app=None):
 
 # debug script
 def forDebug():
-    Instanse=WebAppConfig()
-    print(Instanse.getMethod(SelectSQLite3))
+    Instance = WebAppConfig()
+    print(Instance.getMethod(SelectSQLite3))
 
     classname=['WebAppConfig','SelectSQLite3','SelectPgSQL']
     for clsname in classname:
-        Instanse.getInherit(eval(clsname))
+        Instance.getInherit(eval(clsname))
 
 if __name__=='__main__':
     if __switch__['install'] is False:
