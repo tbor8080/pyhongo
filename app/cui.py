@@ -23,7 +23,8 @@ def Dialog():
     print('# Setup to Web Application(auto generator).')
     print('# Installer is command line interface.')
     print('#'*32)
-    q=input('+ Using GUI(Graphical User Interface)? >[Y/N] <Skip to Enter>:')
+    # q=input('+ Using GUI(Graphical User Interface)? >[Y/N] <Skip to Enter>:')
+    q = ""
     default='./first_flask_app'
     if q.lower()=='y':
         root=tk.Tk()
@@ -339,8 +340,8 @@ def module():
             print('Next...')
     else:
         __config__=Dialog()
-        assave_app_json(file=json_file,data=__config__)
-        assave_app_py(file=py_file,data=set_app_py(__config__))
+        assave_app_json(file=json_file, data=__config__)
+        assave_app_py(file=py_file, data=set_app_py(__config__))
         print(f'** install:{json_file}/{py_file} Success !!')
 
 if __name__=='__main__' or __name__=='cui':
