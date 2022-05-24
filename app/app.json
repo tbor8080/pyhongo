@@ -1,0 +1,27 @@
+{
+    "current_directory": "/Users/ryohei/github/pyhongo/pyhongo/app",
+    "doc_root": "./first_flask_app",
+    "config": "./first_flask_app/manage/config.json",
+    "app_json": "app.json",
+    "app_py": "app.py",
+    "web_title": "sample",
+    "PyFile": "main.py",
+    "TmplFile": "main.html",
+    "database": {
+        "type": "sqlite",
+        "name": "test.db"
+    },
+    "switch": {
+        "install": false,
+        "flask": false,
+        "gunicorn": false,
+        "database": [
+            false,
+            "sqlite"
+        ],
+        "browser": [
+            false,
+            "chrome"
+        ]
+    }
+}
